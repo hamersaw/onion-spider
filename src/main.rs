@@ -1,15 +1,62 @@
-extern crate regex;
-extern crate socks;
+use std::io::{self, BufReader};
+use std::io::prelude::*;
+use std::fs::File;
+use std::sync::mpsc;
+use std::thread;
 
-use std::io::{Error, Read, Write};
-use std::net::SocketAddr;
-use std::str::FromStr;
-
-use regex::Regex;
-
-use socks::{Socks5Stream, TargetAddr};
+static THREAD_COUNT: i32 = 10;
 
 fn main() {
+    let mut site_chans = Vec::new();
+    let (done_tx, done_rx) = mpsc::channel();
+
+    //start up all of the threads
+    for id in 0..THREAD_COUNT {
+        let (site_tx, site_rx) = mpsc::channel();
+        site_chans.push(site_tx);
+        let thread_done_tx = done_tx.clone();
+
+        thread::spawn(move || {
+            println!("started thread {}", id);
+
+            while true {
+                let site = site_rx.recv().unwrap();
+
+                println!("thread {} working on site {}", id, site);
+                thread_done_tx.send(id);
+            }
+        });
+    }
+
+    //read in onion addresses
+    let mut site_buffer: Vec<String> = Vec::new();
+    let file = File::open("examples/sites.txt").unwrap();
+    let reader = BufReader::new(file);
+
+    for site in reader.lines() {
+        site_buffer.push(site.unwrap());
+    }
+
+    //push onion addresses to work channel
+    let (mut index, mut active_sites) = (0, 0);
+    while site_buffer.len() != 0 {
+        let site = site_buffer.pop().unwrap();
+
+        site_chans[index].send(site);
+        index = (index + 1) % site_chans.len();
+        active_sites += 1;
+    }
+
+
+    while active_sites > 0 {
+        let chan_id = done_rx.recv().unwrap();
+        
+        println!("completed:{}", chan_id);
+        active_sites -= 1;
+    }
+}
+
+/*fn main() {
     //connect to site through proxy
     let proxy_addr = SocketAddr::from_str("127.0.0.1:9050").unwrap();
 
@@ -54,4 +101,4 @@ fn crawl(proxy_addr: &SocketAddr, target_addr: TargetAddr) -> Result<Vec<String>
     }
 
     Ok(found_addrs)
-}
+}*/
