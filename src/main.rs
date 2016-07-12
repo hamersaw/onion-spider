@@ -1,4 +1,4 @@
-use std::io::{self, BufReader};
+use std::io::BufReader;
 use std::io::prelude::*;
 use std::fs::File;
 use std::sync::mpsc;
@@ -7,11 +7,14 @@ use std::thread;
 static THREAD_COUNT: i32 = 10;
 
 fn main() {
+    let mut open_chans = Vec::new();
     let mut site_chans = Vec::new();
     let (done_tx, done_rx) = mpsc::channel();
 
     //start up all of the threads
     for id in 0..THREAD_COUNT {
+        open_chans.push(id);
+
         let (site_tx, site_rx) = mpsc::channel();
         site_chans.push(site_tx);
         let thread_done_tx = done_tx.clone();
@@ -19,11 +22,17 @@ fn main() {
         thread::spawn(move || {
             println!("started thread {}", id);
 
-            while true {
-                let site = site_rx.recv().unwrap();
+            loop {
+                let site = match site_rx.recv() {
+                    Ok(site) => site,
+                    Err(_) => {
+                        println!("error recv thread {}", id);
+                        return
+                    },
+                };
 
                 println!("thread {} working on site {}", id, site);
-                thread_done_tx.send(id);
+                thread_done_tx.send(id).unwrap();
             }
         });
     }
@@ -37,17 +46,21 @@ fn main() {
         site_buffer.push(site.unwrap());
     }
 
-    //push onion addresses to work channel
-    let (mut index, mut active_sites) = (0, 0);
-    while site_buffer.len() != 0 {
+    //push initial onion addresses to work channel
+    let mut active_sites = 0;
+    while open_chans.len() > 0 {
+        if site_buffer.len() == 0 {
+            break
+        }
+
+        let chan_index = open_chans.pop().unwrap();
         let site = site_buffer.pop().unwrap();
 
-        site_chans[index].send(site);
-        index = (index + 1) % site_chans.len();
+        site_chans[chan_index as usize].send(site).unwrap();
         active_sites += 1;
     }
 
-
+    //
     while active_sites > 0 {
         let chan_id = done_rx.recv().unwrap();
         
