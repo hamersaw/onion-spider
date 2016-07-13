@@ -1,8 +1,16 @@
-use std::io::BufReader;
+extern crate onion_spider;
+
+fn main() {
+    println!("hello onion spider");
+}
+
+/*use std::io::BufReader;
 use std::io::prelude::*;
 use std::fs::File;
 use std::sync::mpsc;
 use std::thread;
+
+use downloader::wget_download;
 
 static THREAD_COUNT: i32 = 10;
 
@@ -23,16 +31,16 @@ fn main() {
             println!("started thread {}", id);
 
             loop {
-                let site = match site_rx.recv() {
-                    Ok(site) => site,
+                match site_rx.recv() {
+                    Ok(site) => {
+                        wget_download(site).unwrap();
+                        thread_done_tx.send(id).unwrap();
+                    }
                     Err(_) => {
                         println!("error recv thread {}", id);
-                        return
+                        break
                     },
-                };
-
-                println!("thread {} working on site {}", id, site);
-                thread_done_tx.send(id).unwrap();
+                }
             }
         });
     }
@@ -67,7 +75,7 @@ fn main() {
         println!("completed:{}", chan_id);
         active_sites -= 1;
     }
-}
+}*/
 
 /*fn main() {
     //connect to site through proxy
