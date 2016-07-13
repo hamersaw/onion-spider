@@ -5,7 +5,10 @@ authors = ["Dan Rammer <hamersaw@gmail.com>"]
 build = "build.rs"
 
 [build-dependencies]
-capnpc = "*"
+capnpc = "0.7.*"
 
 [dependencies]
-capnpc = "*"
+capnp = "0.7.*"
+capnpc = "0.7.*"
+docopt = "0.6.*"
+rustc-serialize = "0.3.*"

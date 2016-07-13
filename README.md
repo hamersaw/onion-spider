@@ -4,14 +4,13 @@
 Web spider for TOR written in rust.
 
 ##Design
-onion_spider
+yogi
     description: client application to interact with daemon application
 
     commands
-        crawl-site <site>
-        frontier-size
+        crawl <site>
 
-onion_spider_d
+onion_spider
     description: daemon application to crawl tor
 
     toml configuration file
