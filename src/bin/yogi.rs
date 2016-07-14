@@ -9,6 +9,7 @@ Interact with SpiderOnion application
 
 Usage:
     yogi crawl <site> [--ip-address=<ip>] [--port=<port>]
+    yogi stats
     yogi (-h | --help)
 
 Options:
@@ -20,6 +21,7 @@ Options:
 #[derive(Debug, RustcDecodable)]
 struct Args {
     cmd_crawl: bool,
+    cmd_stats: bool,
     arg_site: Option<String>,
     flag_ip_address: String,
     flag_port: i32,
@@ -34,5 +36,7 @@ fn main() {
 
     if args.cmd_crawl {
         //issue crawl request
+    } else if args.cmd_stats {
+        //issue stats request
     }
 }

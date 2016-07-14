@@ -3,6 +3,6 @@
 struct SpiderOnionMessage {
     messageType :union {
         crawlRequest @0 :List(Text);
-        frontierSizeRequest @1 :Void;
+        statsRequest @1 :Void;
     }
 }
