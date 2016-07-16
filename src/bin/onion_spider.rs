@@ -66,17 +66,11 @@ fn main() {
 
                 match msg.get_message_type().which() {
                     Ok(CrawlRequest(crawl_request_result)) => {
-                        
+                        let crawl_request = crawl_request_result.unwrap();
 
-                        /*let mut iter = crawl_request_result.unwrap().iter();
-                        loop {
-                            match iter.next() {
-                                Some(site) => {
-
-                                },
-                                None => break,
-                            }
-                        }*/
+                        for i in 0..crawl_request.len() {
+                            println!("site {}", crawl_request.get(i).unwrap());
+                        }
                     },
                     Ok(_) => panic!("unknown onion spider message type"),
                     Err(e) => panic!("unknown error: {}", e),

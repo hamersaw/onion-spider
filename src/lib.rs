@@ -19,7 +19,7 @@ pub fn create_crawl_request_msg(sites: Vec<String>) -> Result<Builder<HeapAlloca
         let mut crawl_request = msg.get_message_type().init_crawl_request(sites.len() as u32);
 
         for (i, site) in sites.iter().enumerate() {
-            crawl_request.set(i as u32, site);
+            crawl_request.borrow().set(i as u32, &site);
         }
     }
 
