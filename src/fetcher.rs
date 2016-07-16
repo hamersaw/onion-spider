@@ -10,7 +10,9 @@ pub struct WgetFetcher {
 }
 
 impl WgetFetcher {
-    pub fn new(download_directory: String) -> WgetFetcher {
+    pub fn new(download_directory: String, thread_count: i32) -> WgetFetcher {
+        //TODO start up threads
+
         WgetFetcher {
             download_directory: download_directory,
         }

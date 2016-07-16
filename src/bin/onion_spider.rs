@@ -8,10 +8,10 @@ use std::str::FromStr;
 use std::sync::{Arc, RwLock};
 use std::thread;
 
-use capnp::NotInSchema;
 use capnp::message::ReaderOptions;
 use capnp::serialize::{read_message, write_message};
 use docopt::Docopt;
+use onion_spider::{create_stats_reply};
 use onion_spider::fetcher::{Fetcher, WgetFetcher};
 use onion_spider::frontier::{FIFOFrontier, Frontier};
 use onion_spider::link_extractor::{IterativeExtractor, LinkExtractor};
@@ -21,19 +21,21 @@ const USAGE: &'static str = "
 OnionSpider application used for distributed crawling of TOR hidden services
 
 Usage:
-    onion_spider [--site-directory=<dir>] [--ip-address=<ip>] [--port=<port>]
+    onion_spider [--site-directory=<dir>] [--thread-count=<thread>] [--ip-address=<ip>] [--port=<port>]
     onion_spider (-h | --help)
 
 Options:
-    -h --help               Show this screen.
-    --site-directory=<dir>  Directory to download sites to [default: ./sites].
-    --ip-address=<ip>       IP address of application [default: 127.0.0.1].
-    --port=<port>           Port of application [default: 12289].
+    -h --help                   Show this screen.
+    --site-directory=<dir>      Directory to download sites to [default: ./sites].
+    --thread-count=<thread>     Number of fetching threads [default: 10].
+    --ip-address=<ip>           IP address of application [default: 127.0.0.1].
+    --port=<port>               Port of application [default: 12289].
 ";
 
 #[derive(Debug, RustcDecodable)]
 struct Args {
     flag_site_directory: String,
+    flag_thread_count: i32,
     flag_ip_address: String,
     flag_port: i32,
 }
@@ -44,7 +46,7 @@ fn main() {
                         .unwrap_or_else(|e| e.exit());
 
     //create crawling structures
-    let fetcher = Arc::new(RwLock::new(WgetFetcher::new(args.flag_site_directory.clone())));
+    let fetcher = Arc::new(RwLock::new(WgetFetcher::new(args.flag_site_directory.clone(), args.flag_thread_count)));
     let frontier = Arc::new(RwLock::new(FIFOFrontier::new()));
     let link_extractor = Arc::new(RwLock::new(IterativeExtractor::new(args.flag_site_directory)));
 
@@ -89,13 +91,28 @@ fn main() {
                         };
 
                         for i in 0..crawl_request.len() {
-                            write_frontier.add_site(crawl_request.get(i).unwrap());
+                            let _ = write_frontier.add_site(crawl_request.get(i).unwrap());
                         }
                     },
                     Ok(StatsRequest(_)) => {
                         //handle a stats request
                         println!("TODO issue stats request");
+                        let read_frontier = match thread_frontier.read() {
+                            Ok(read_frontier) => read_frontier,
+                            Err(e) => panic!("unable to get read lock on frontier: {}", e),
+                        };
+
+                        let stats_reply = match create_stats_reply(read_frontier.len()) {
+                            Ok(stats_reply) => stats_reply,
+                            Err(e) => panic!("unable to create stats reply: {}", e),
+                        };
+
+                        match write_message(&mut stream, &stats_reply) {
+                            Err(e) => panic!("unable to write stats reply: {}", e),
+                            _ => {},
+                        };
                     },
+                    Ok(_) => panic!("unexpected message type"),
                     Err(e) => panic!("unknown error: {}", e),
                 }
             });

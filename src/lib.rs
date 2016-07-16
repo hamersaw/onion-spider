@@ -11,7 +11,7 @@ use std::io::Error;
 
 use capnp::message::{Builder, HeapAllocator};
 
-pub fn create_crawl_request_msg(sites: Vec<String>) -> Result<Builder<HeapAllocator>, Error> {
+pub fn create_crawl_request(sites: Vec<String>) -> Result<Builder<HeapAllocator>, Error> {
     let mut builder = Builder::new_default();
 
     {
@@ -26,12 +26,25 @@ pub fn create_crawl_request_msg(sites: Vec<String>) -> Result<Builder<HeapAlloca
     Ok(builder)
 }
 
-pub fn create_stats_request_msg() -> Result<Builder<HeapAllocator>, Error> {
+pub fn create_stats_request() -> Result<Builder<HeapAllocator>, Error> {
     let mut builder = Builder::new_default();
 
     {
         let msg = builder.init_root::<message_capnp::onion_spider_message::Builder>();
         let _ = msg.get_message_type().set_stats_request(());
+    }
+
+    Ok(builder)
+}
+
+pub fn create_stats_reply(frontier_size: u64) -> Result<Builder<HeapAllocator>, Error> {
+    let mut builder = Builder::new_default();
+
+    {
+        let msg = builder.init_root::<message_capnp::onion_spider_message::Builder>();
+        let mut stats_reply = msg.get_message_type().init_stats_reply();
+
+        stats_reply.set_frontier_size(frontier_size);
     }
 
     Ok(builder)

@@ -4,5 +4,8 @@ struct OnionSpiderMessage {
     messageType :union {
         crawlRequest @0 :List(Text);
         statsRequest @1 :Void;
+        statsReply :group {
+            frontierSize @2 :UInt64;
+        }
     }
 }

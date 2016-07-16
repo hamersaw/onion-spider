@@ -6,9 +6,11 @@ extern crate rustc_serialize;
 use std::net::{SocketAddr, TcpStream};
 use std::str::FromStr;
 
+use capnp::message::ReaderOptions;
 use capnp::serialize::{read_message, write_message};
 use docopt::Docopt;
-use onion_spider::{create_crawl_request_msg, create_stats_request_msg};
+use onion_spider::{create_crawl_request, create_stats_request};
+use onion_spider::message_capnp::onion_spider_message::message_type::{StatsReply};
 
 const USAGE: &'static str = "
 Interact with SpiderOnion application
@@ -56,12 +58,12 @@ fn main() {
             None => panic!("unable to issue empty crawl request, 0 sites were provided"),
         };
 
-        let crawl_request_msg = match create_crawl_request_msg(sites) {
-            Ok(crawl_request_msg) => crawl_request_msg,
+        let crawl_request = match create_crawl_request(sites) {
+            Ok(crawl_request) => crawl_request,
             Err(_) => panic!("unable to create crawl request message"),
         };
 
-        match write_message(&mut stream, &crawl_request_msg) {
+        match write_message(&mut stream, &crawl_request) {
             Err(_) => panic!("unable to send crawl request message"),
             _ => {},
         }
@@ -69,16 +71,34 @@ fn main() {
         //TODO recv
     } else if args.cmd_stats {
         //issue stats request
-        let stats_request_msg = match create_stats_request_msg() {
-            Ok(stats_request_msg) => stats_request_msg,
+        let stats_request = match create_stats_request() {
+            Ok(stats_request) => stats_request,
             Err(_) => panic!("unable to create stats request message"),
         };
 
-        match write_message(&mut stream, &stats_request_msg) {
+        match write_message(&mut stream, &stats_request) {
             Err(_) => panic!("unable to send stats request message"),
             _ => {},
         }
 
-        //TODO recv
+        //read spider onion message
+        let reader = match read_message(&mut stream, ReaderOptions::default()) {
+            Ok(reader) => reader,
+            Err(_) => panic!("unable to read message from tcp stream"),
+        };
+
+        let msg = match reader.get_root::<onion_spider::message_capnp::onion_spider_message::Reader>() {
+            Ok(msg) => msg,
+            Err(_) => panic!("unable to parse onion spider message"),
+        };
+
+        //
+        match msg.get_message_type().which() {
+            Ok(StatsReply(stats_reply)) => {
+                println!("frontier size: {}", stats_reply.get_frontier_size());
+            },
+            Err(e) => panic!("unable to get message type stats request reply: {}", e),
+            _ => panic!("expecting a stats reply from a stats request"),
+        }
     }
 }

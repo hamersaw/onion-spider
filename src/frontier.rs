@@ -3,7 +3,7 @@ use std::io::Error;
 pub trait Frontier {
     fn add_site(&self, site: &str) -> Result<(), Error>;
     fn get_next_site(&self) -> Option<String>;
-    fn len(&self) -> usize;
+    fn len(&self) -> u64;
 }
 
 pub struct FIFOFrontier {
@@ -24,7 +24,7 @@ impl Frontier for FIFOFrontier {
         unimplemented!();
     }
 
-    fn len(&self) -> usize {
-        unimplemented!();
+    fn len(&self) -> u64 {
+        0
     }
 }
