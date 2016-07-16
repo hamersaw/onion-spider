@@ -5,29 +5,35 @@ extern crate rustc_serialize;
 
 use std::net::{SocketAddr, TcpListener};
 use std::str::FromStr;
+use std::sync::{Arc, RwLock};
 use std::thread;
 
 use capnp::NotInSchema;
 use capnp::message::ReaderOptions;
 use capnp::serialize::{read_message, write_message};
 use docopt::Docopt;
+use onion_spider::fetcher::{Fetcher, WgetFetcher};
+use onion_spider::frontier::{FIFOFrontier, Frontier};
+use onion_spider::link_extractor::{IterativeExtractor, LinkExtractor};
 use onion_spider::message_capnp::onion_spider_message::message_type::{CrawlRequest, StatsRequest};
 
 const USAGE: &'static str = "
 OnionSpider application used for distributed crawling of TOR hidden services
 
 Usage:
-    onion_spider [--ip-address=<ip>] [--port=<port>]
+    onion_spider [--site-directory=<dir>] [--ip-address=<ip>] [--port=<port>]
     onion_spider (-h | --help)
 
 Options:
-    -h --help           Show this screen.
-    --ip-address=<ip>   IP address of application [default: 127.0.0.1].
-    --port=<port>       Port of application [default: 12289].
+    -h --help               Show this screen.
+    --site-directory=<dir>  Directory to download sites to [default: ./sites].
+    --ip-address=<ip>       IP address of application [default: 127.0.0.1].
+    --port=<port>           Port of application [default: 12289].
 ";
 
 #[derive(Debug, RustcDecodable)]
 struct Args {
+    flag_site_directory: String,
     flag_ip_address: String,
     flag_port: i32,
 }
@@ -37,6 +43,12 @@ fn main() {
                         .and_then(|d| d.decode())
                         .unwrap_or_else(|e| e.exit());
 
+    //create crawling structures
+    let fetcher = Arc::new(RwLock::new(WgetFetcher::new(args.flag_site_directory.clone())));
+    let frontier = Arc::new(RwLock::new(FIFOFrontier::new()));
+    let link_extractor = Arc::new(RwLock::new(IterativeExtractor::new(args.flag_site_directory)));
+
+    //open tcp listener
     let app_addr = match SocketAddr::from_str(&format!("{}:{}", args.flag_ip_address, args.flag_port)) {
         Ok(app_addr) => app_addr,
         Err(_) => panic!("unable to parse ip address {};{}", args.flag_ip_address, args.flag_port),
@@ -50,6 +62,8 @@ fn main() {
     //start tcp listener thread
     let handle = thread::spawn(move || {
         for stream in listener.incoming() {
+            let thread_frontier = frontier.clone();
+
             thread::spawn(move || {
                 let mut stream = stream.unwrap();
 
@@ -66,13 +80,22 @@ fn main() {
 
                 match msg.get_message_type().which() {
                     Ok(CrawlRequest(crawl_request_result)) => {
+                        //handle a crawl request
                         let crawl_request = crawl_request_result.unwrap();
 
+                        let write_frontier = match thread_frontier.write() {
+                            Ok(write_frontier) => write_frontier,
+                            Err(e) => panic!("unable to get write lock on frontier: {}", e),
+                        };
+
                         for i in 0..crawl_request.len() {
-                            println!("site {}", crawl_request.get(i).unwrap());
+                            write_frontier.add_site(crawl_request.get(i).unwrap());
                         }
                     },
-                    Ok(_) => panic!("unknown onion spider message type"),
+                    Ok(StatsRequest(_)) => {
+                        //handle a stats request
+                        println!("TODO issue stats request");
+                    },
                     Err(e) => panic!("unknown error: {}", e),
                 }
             });

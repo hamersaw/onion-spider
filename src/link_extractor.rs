@@ -1,15 +1,23 @@
 use std::io::Error;
 
-trait LinkExtractor {
-    fn extract(site: String) -> Result<Vec<String>, Error>;
+pub trait LinkExtractor {
+    fn extract(&self, site: String) -> Result<Vec<String>, Error>;
 }
 
-struct IterativeExtractor {
+pub struct IterativeExtractor {
     download_directory: String,
 }
 
+impl IterativeExtractor {
+    pub fn new(download_directory: String) -> IterativeExtractor {
+        IterativeExtractor {
+            download_directory: download_directory,
+        }
+    }
+}
+
 impl LinkExtractor for IterativeExtractor {
-    fn extract(site: String) -> Result<Vec<String>, Error> {
+    fn extract(&self, site: String) -> Result<Vec<String>, Error> {
         unimplemented!();
     }
 }

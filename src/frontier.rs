@@ -1,19 +1,30 @@
 use std::io::Error;
 
-trait Frontier {
-    fn add_site() -> Result<(), Error>;
-    fn get_next_site() -> Option<String>;
+pub trait Frontier {
+    fn add_site(&self, site: &str) -> Result<(), Error>;
+    fn get_next_site(&self) -> Option<String>;
+    fn len(&self) -> usize;
 }
 
-struct FIFOFrontier {
+pub struct FIFOFrontier {
+}
+
+impl FIFOFrontier {
+    pub fn new() -> FIFOFrontier {
+        FIFOFrontier{}
+    }
 }
 
 impl Frontier for FIFOFrontier {
-    fn add_site() -> Result<(), Error> {
+    fn add_site(&self, site: &str) -> Result<(), Error> {
         unimplemented!();
     }
 
-    fn get_next_site() -> Option<String> {
+    fn get_next_site(&self) -> Option<String> {
+        unimplemented!();
+    }
+
+    fn len(&self) -> usize {
         unimplemented!();
     }
 }
