@@ -85,7 +85,7 @@ fn main() {
                         //handle a crawl request
                         let crawl_request = crawl_request_result.unwrap();
 
-                        let write_frontier = match thread_frontier.write() {
+                        let mut write_frontier = match thread_frontier.write() {
                             Ok(write_frontier) => write_frontier,
                             Err(e) => panic!("unable to get write lock on frontier: {}", e),
                         };
@@ -96,7 +96,6 @@ fn main() {
                     },
                     Ok(StatsRequest(_)) => {
                         //handle a stats request
-                        println!("TODO issue stats request");
                         let read_frontier = match thread_frontier.read() {
                             Ok(read_frontier) => read_frontier,
                             Err(e) => panic!("unable to get read lock on frontier: {}", e),
