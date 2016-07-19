@@ -1,5 +1,5 @@
 use std::io::Error;
-use std::sync::{PoisonError, RwLock};
+use std::sync::RwLock;
 
 pub trait Frontier {
     fn add_site(&self, site: &str) -> Result<(), Error>;

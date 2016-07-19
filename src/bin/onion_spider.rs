@@ -14,7 +14,7 @@ use docopt::Docopt;
 use onion_spider::{create_stats_reply};
 use onion_spider::fetcher::{Fetcher, WgetFetcher};
 use onion_spider::frontier::{FIFOFrontier, Frontier};
-use onion_spider::link_extractor::{IterativeExtractor, LinkExtractor};
+use onion_spider::link_extractor::IterativeExtractor;
 use onion_spider::message_capnp::onion_spider_message::message_type::{CrawlRequest, StatsRequest};
 
 const USAGE: &'static str = "
@@ -53,7 +53,7 @@ fn main() {
         let thread_site_directory = args.flag_site_directory.clone();
 
         thread::spawn(move || {
-            let fetcher = WgetFetcher::new(thread_site_directory, thread_frontier);
+            let fetcher = WgetFetcher::new(thread_site_directory.clone(), thread_frontier, Box::new(IterativeExtractor::new(thread_site_directory)));
             match fetcher.start() {
                 Ok(_) => {},
                 Err(e) => panic!("unable to start fetcher {}: {}", i, e),
@@ -123,79 +123,6 @@ fn main() {
 
     handle.join().unwrap();
 }
-
-/*use std::io::BufReader;
-use std::io::prelude::*;
-use std::fs::File;
-use std::sync::mpsc;
-use std::thread;
-
-use downloader::wget_download;
-
-static THREAD_COUNT: i32 = 10;
-
-fn main() {
-    let mut open_chans = Vec::new();
-    let mut site_chans = Vec::new();
-    let (done_tx, done_rx) = mpsc::channel();
-
-    //start up all of the threads
-    for id in 0..THREAD_COUNT {
-        open_chans.push(id);
-
-        let (site_tx, site_rx) = mpsc::channel();
-        site_chans.push(site_tx);
-        let thread_done_tx = done_tx.clone();
-
-        thread::spawn(move || {
-            println!("started thread {}", id);
-
-            loop {
-                match site_rx.recv() {
-                    Ok(site) => {
-                        wget_download(site).unwrap();
-                        thread_done_tx.send(id).unwrap();
-                    }
-                    Err(_) => {
-                        println!("error recv thread {}", id);
-                        break
-                    },
-                }
-            }
-        });
-    }
-
-    //read in onion addresses
-    let mut site_buffer: Vec<String> = Vec::new();
-    let file = File::open("examples/sites.txt").unwrap();
-    let reader = BufReader::new(file);
-
-    for site in reader.lines() {
-        site_buffer.push(site.unwrap());
-    }
-
-    //push initial onion addresses to work channel
-    let mut active_sites = 0;
-    while open_chans.len() > 0 {
-        if site_buffer.len() == 0 {
-            break
-        }
-
-        let chan_index = open_chans.pop().unwrap();
-        let site = site_buffer.pop().unwrap();
-
-        site_chans[chan_index as usize].send(site).unwrap();
-        active_sites += 1;
-    }
-
-    //
-    while active_sites > 0 {
-        let chan_id = done_rx.recv().unwrap();
-        
-        println!("completed:{}", chan_id);
-        active_sites -= 1;
-    }
-}*/
 
 /*fn main() {
     //connect to site through proxy

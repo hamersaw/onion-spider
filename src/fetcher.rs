@@ -1,25 +1,29 @@
 use frontier::Frontier;
+use link_extractor::LinkExtractor;
 
 use std::io::Error;
 use std::process::Command;
 use std::sync::Arc;
-use std::thread::sleep_ms;
+use std::thread::sleep;
+use std::time::Duration;
 
 pub trait Fetcher {
     fn start(&self) -> Result<(), Error>;
-    fn fetch(&self, site: String) -> Result<(), Error>;
+    fn fetch(&self, site: &str) -> Result<(), Error>;
 }
 
 pub struct WgetFetcher {
     download_directory: String,
     frontier: Arc<Frontier>,
+    link_extractor: Box<LinkExtractor>,
 }
 
 impl WgetFetcher {
-    pub fn new(download_directory: String, frontier: Arc<Frontier>) -> WgetFetcher {
+    pub fn new(download_directory: String, frontier: Arc<Frontier>, link_extractor: Box<LinkExtractor>) -> WgetFetcher {
         WgetFetcher {
             download_directory: download_directory,
             frontier: frontier,
+            link_extractor: link_extractor,
         }
     }
 }
@@ -27,18 +31,24 @@ impl WgetFetcher {
 impl Fetcher for WgetFetcher {
     fn start(&self) -> Result<(), Error> {
         loop {
-            println!("polling for next site");
             match self.frontier.get_next_site() {
                 Some(site) => {
-                    self.fetch(site);
+                    //fetch site
+                    try!(self.fetch(&site));
+
+                    //extract links and add to frontier
+                    let sites = try!(self.link_extractor.extract(&site));
+                    for site in sites {
+                        try!(self.frontier.add_site(&site));
+                    }
                 },
-                None => sleep_ms(500),
+                None => sleep(Duration::from_millis(500)),
             }
         }
     }
 
-    fn fetch(&self, site: String) -> Result<(), Error> {
-        println!("fetching site {}", site);
+    fn fetch(&self, site: &str) -> Result<(), Error> {
+        println!("TODO fetch site {}", site);
         Ok(())
     }
 }
