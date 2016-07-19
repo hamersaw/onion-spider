@@ -2,6 +2,8 @@ use frontier::Frontier;
 
 use std::io::Error;
 use std::process::Command;
+use std::sync::Arc;
+use std::thread::sleep_ms;
 
 pub trait Fetcher {
     fn start(&self) -> Result<(), Error>;
@@ -10,25 +12,34 @@ pub trait Fetcher {
 
 pub struct WgetFetcher {
     download_directory: String,
+    frontier: Arc<Frontier>,
 }
 
 impl WgetFetcher {
-    pub fn new(download_directory: String) -> WgetFetcher {
-        //TODO start up threads
-
+    pub fn new(download_directory: String, frontier: Arc<Frontier>) -> WgetFetcher {
         WgetFetcher {
             download_directory: download_directory,
+            frontier: frontier,
         }
     }
 }
 
 impl Fetcher for WgetFetcher {
     fn start(&self) -> Result<(), Error> {
-        unimplemented!();
+        loop {
+            println!("polling for next site");
+            match self.frontier.get_next_site() {
+                Some(site) => {
+                    self.fetch(site);
+                },
+                None => sleep_ms(500),
+            }
+        }
     }
 
     fn fetch(&self, site: String) -> Result<(), Error> {
-        unimplemented!();
+        println!("fetching site {}", site);
+        Ok(())
     }
 }
 

@@ -48,10 +48,18 @@ fn main() {
     //create crawling structures
     let frontier = Arc::new(FIFOFrontier::new());
 
-    /*for i in 0..args.flag_thread_count {
-        let fetcher = Arc::new(RwLock::new(WgetFetcher::new(args.flag_site_directory.clone())));
-        fetcher.start();
-    }*/
+    for i in 0..args.flag_thread_count {
+        let thread_frontier = frontier.clone();
+        let thread_site_directory = args.flag_site_directory.clone();
+
+        thread::spawn(move || {
+            let fetcher = WgetFetcher::new(thread_site_directory, thread_frontier);
+            match fetcher.start() {
+                Ok(_) => {},
+                Err(e) => panic!("unable to start fetcher {}: {}", i, e),
+            }
+        });
+    }
 
     //let link_extractor = Arc::new(RwLock::new(IterativeExtractor::new(args.flag_site_directory)));
 
@@ -90,22 +98,12 @@ fn main() {
                         //handle a crawl request
                         let crawl_request = crawl_request_result.unwrap();
 
-                        /*let mut write_frontier = match thread_frontier.write() {
-                            Ok(write_frontier) => write_frontier,
-                            Err(e) => panic!("unable to get write lock on frontier: {}", e),
-                        };*/
-
                         for i in 0..crawl_request.len() {
                             let _ = thread_frontier.add_site(crawl_request.get(i).unwrap());
                         }
                     },
                     Ok(StatsRequest(_)) => {
                         //handle a stats request
-                        /*let read_frontier = match thread_frontier.read() {
-                            Ok(read_frontier) => read_frontier,
-                            Err(e) => panic!("unable to get read lock on frontier: {}", e),
-                        };*/
-
                         let stats_reply = match create_stats_reply(thread_frontier.len()) {
                             Ok(stats_reply) => stats_reply,
                             Err(e) => panic!("unable to create stats reply: {}", e),
