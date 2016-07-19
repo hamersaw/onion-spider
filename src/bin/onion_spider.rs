@@ -26,7 +26,7 @@ Usage:
 
 Options:
     -h --help                   Show this screen.
-    --site-directory=<dir>      Directory to download sites to [default: ./sites].
+    --site-directory=<dir>      Directory to download sites to [default: sites].
     --thread-count=<thread>     Number of fetching threads [default: 10].
     --ip-address=<ip>           IP address of application [default: 127.0.0.1].
     --port=<port>               Port of application [default: 12289].
@@ -56,12 +56,10 @@ fn main() {
             let fetcher = WgetFetcher::new(thread_site_directory.clone(), thread_frontier, Box::new(IterativeExtractor::new(thread_site_directory)));
             match fetcher.start() {
                 Ok(_) => {},
-                Err(e) => panic!("unable to start fetcher {}: {}", i, e),
+                Err(e) => panic!("unable to run fetcher {}: {}", i, e),
             }
         });
     }
-
-    //let link_extractor = Arc::new(RwLock::new(IterativeExtractor::new(args.flag_site_directory)));
 
     //open tcp listener
     let app_addr = match SocketAddr::from_str(&format!("{}:{}", args.flag_ip_address, args.flag_port)) {

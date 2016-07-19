@@ -7,4 +7,4 @@ Web spider for TOR written in rust.
 xmh57jrzrnw6insl - Torch Search Engine
 
 ##TODO
-- immplement site fetching
+- implement link extracting - close to a working crawler

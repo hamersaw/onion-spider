@@ -2,7 +2,7 @@ use frontier::Frontier;
 use link_extractor::LinkExtractor;
 
 use std::io::Error;
-use std::process::Command;
+use std::process::{Command, Stdio};
 use std::sync::Arc;
 use std::thread::sleep;
 use std::time::Duration;
@@ -48,16 +48,14 @@ impl Fetcher for WgetFetcher {
     }
 
     fn fetch(&self, site: &str) -> Result<(), Error> {
-        println!("TODO fetch site {}", site);
+        match Command::new("torsocks")
+                    .args(&["wget", "-r", "--no-parent", "-P", &self.download_directory, &format!("http://{}.onion", site)])
+                    .stdout(Stdio::null())
+                    .output() {
+            Ok(_) => {},
+            Err(e) => panic!("{}", e),
+        }
+
         Ok(())
     }
 }
-
-/*pub fn wget_download(site: String) -> Result<String, Error> {
-    println!("downloading site {}", site);
-
-    match Command::new("torsock").arg(format!("wget -r --no-parent http://{}.onion", site)).spawn() {
-        Ok(_) => Ok(site),
-        Err(e) => Err(e),
-    }
-}*/
