@@ -5,7 +5,7 @@ extern crate rustc_serialize;
 
 use std::net::{SocketAddr, TcpListener};
 use std::str::FromStr;
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
 use std::thread;
 
 use capnp::message::ReaderOptions;
@@ -46,9 +46,14 @@ fn main() {
                         .unwrap_or_else(|e| e.exit());
 
     //create crawling structures
-    let fetcher = Arc::new(RwLock::new(WgetFetcher::new(args.flag_site_directory.clone(), args.flag_thread_count)));
-    let frontier = Arc::new(RwLock::new(FIFOFrontier::new()));
-    let link_extractor = Arc::new(RwLock::new(IterativeExtractor::new(args.flag_site_directory)));
+    let frontier = Arc::new(FIFOFrontier::new());
+
+    /*for i in 0..args.flag_thread_count {
+        let fetcher = Arc::new(RwLock::new(WgetFetcher::new(args.flag_site_directory.clone())));
+        fetcher.start();
+    }*/
+
+    //let link_extractor = Arc::new(RwLock::new(IterativeExtractor::new(args.flag_site_directory)));
 
     //open tcp listener
     let app_addr = match SocketAddr::from_str(&format!("{}:{}", args.flag_ip_address, args.flag_port)) {
@@ -85,23 +90,23 @@ fn main() {
                         //handle a crawl request
                         let crawl_request = crawl_request_result.unwrap();
 
-                        let mut write_frontier = match thread_frontier.write() {
+                        /*let mut write_frontier = match thread_frontier.write() {
                             Ok(write_frontier) => write_frontier,
                             Err(e) => panic!("unable to get write lock on frontier: {}", e),
-                        };
+                        };*/
 
                         for i in 0..crawl_request.len() {
-                            let _ = write_frontier.add_site(crawl_request.get(i).unwrap());
+                            let _ = thread_frontier.add_site(crawl_request.get(i).unwrap());
                         }
                     },
                     Ok(StatsRequest(_)) => {
                         //handle a stats request
-                        let read_frontier = match thread_frontier.read() {
+                        /*let read_frontier = match thread_frontier.read() {
                             Ok(read_frontier) => read_frontier,
                             Err(e) => panic!("unable to get read lock on frontier: {}", e),
-                        };
+                        };*/
 
-                        let stats_reply = match create_stats_reply(read_frontier.len()) {
+                        let stats_reply = match create_stats_reply(thread_frontier.len()) {
                             Ok(stats_reply) => stats_reply,
                             Err(e) => panic!("unable to create stats reply: {}", e),
                         };

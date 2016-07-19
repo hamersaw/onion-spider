@@ -1,7 +1,10 @@
+use frontier::Frontier;
+
 use std::io::Error;
 use std::process::Command;
 
 pub trait Fetcher {
+    fn start(&self) -> Result<(), Error>;
     fn fetch(&self, site: String) -> Result<(), Error>;
 }
 
@@ -10,7 +13,7 @@ pub struct WgetFetcher {
 }
 
 impl WgetFetcher {
-    pub fn new(download_directory: String, thread_count: i32) -> WgetFetcher {
+    pub fn new(download_directory: String) -> WgetFetcher {
         //TODO start up threads
 
         WgetFetcher {
@@ -20,6 +23,10 @@ impl WgetFetcher {
 }
 
 impl Fetcher for WgetFetcher {
+    fn start(&self) -> Result<(), Error> {
+        unimplemented!();
+    }
+
     fn fetch(&self, site: String) -> Result<(), Error> {
         unimplemented!();
     }

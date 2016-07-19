@@ -1,57 +1,68 @@
 use std::io::Error;
+use std::sync::{PoisonError, RwLock};
 
 pub trait Frontier {
-    fn add_site(&mut self, site: &str) -> Result<(), Error>;
-    fn get_next_site(&mut self) -> Option<String>;
+    fn add_site(&self, site: &str) -> Result<(), Error>;
+    fn get_next_site(&self) -> Option<String>;
     fn len(&self) -> u64;
 }
 
 pub struct FIFOFrontier {
-    buffer: Vec<String>,
-    crawled: Vec<String>,
+    buffer: RwLock<Vec<String>>,
+    crawled: RwLock<Vec<String>>,
 }
 
 impl FIFOFrontier {
     pub fn new() -> FIFOFrontier {
         FIFOFrontier {
-            buffer: Vec::new(),
-            crawled: Vec::new(),
+            buffer: RwLock::new(Vec::new()),
+            crawled: RwLock::new(Vec::new()),
         }
     }
 }
 
 impl Frontier for FIFOFrontier {
-    fn add_site(&mut self, site: &str) -> Result<(), Error> {
+    fn add_site(&self, site: &str) -> Result<(), Error> {
         //search current buffer
-        for s in self.buffer.iter() {
-            if s == site {
-                return Ok(());
+        {
+            let read_buffer = self.buffer.read().unwrap();
+            for s in read_buffer.iter() {
+                if s == site {
+                    return Ok(());
+                }
             }
         }
 
         //search crawled
-        for s in self.crawled.iter() {
-            if s == site {
-                return Ok(());
+        {
+            let read_crawled = self.crawled.read().unwrap();
+            for s in read_crawled.iter() {
+                if s == site {
+                    return Ok(());
+                }
             }
         }
 
         //add to buffer
-        self.buffer.push(site.to_string());
+        let mut write_buffer = self.buffer.write().unwrap();
+        write_buffer.push(site.to_string());
         Ok(())
     }
 
-    fn get_next_site(&mut self) -> Option<String> {
-        let site = match self.buffer.pop() {
+    fn get_next_site(&self) -> Option<String> {
+        let mut write_buffer = self.buffer.write().unwrap();
+        let site = match write_buffer.pop() {
             Some(site) => site,
             None => return None,
         };
 
-        self.crawled.push(site.clone());
+        let mut write_crawled = self.crawled.write().unwrap();
+        write_crawled.push(site.clone());
         Some(site)
     }
 
     fn len(&self) -> u64 {
-        self.buffer.len() as u64
+        let read_buffer = self.buffer.read().unwrap();
+        read_buffer.len() as u64
     }
 }
