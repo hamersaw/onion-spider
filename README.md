@@ -8,9 +8,9 @@ to retreive elementary statistics from daemon appliction. Future work is to
 implement a distributed hash table to allow distributed crawls.
 
 ##Requirements
-tor
-torsocks
-wget
+- tor
+- torsocks
+- wget
 
 ##Components
 ####onion-spider
