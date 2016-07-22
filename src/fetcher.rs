@@ -39,6 +39,7 @@ impl Fetcher for WgetFetcher {
                     //extract links and add to frontier
                     let sites = try!(self.link_extractor.extract(&site));
                     for site in sites {
+                        println!("adding site:{}", site);
                         try!(self.frontier.add_site(&site));
                     }
                 },

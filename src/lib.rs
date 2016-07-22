@@ -3,6 +3,9 @@ pub mod frontier;
 pub mod link_extractor;
 
 extern crate capnp;
+extern crate glob;
+extern crate regex;
+
 pub mod message_capnp {
         include!(concat!(env!("OUT_DIR"), "/message_capnp.rs"));
 }

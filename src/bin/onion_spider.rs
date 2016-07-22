@@ -26,7 +26,7 @@ Usage:
 
 Options:
     -h --help                   Show this screen.
-    --site-directory=<dir>      Directory to download sites to [default: sites].
+    --site-directory=<dir>      Directory to download sites to [default: /tmp/sites].
     --thread-count=<thread>     Number of fetching threads [default: 10].
     --ip-address=<ip>           IP address of application [default: 127.0.0.1].
     --port=<port>               Port of application [default: 12289].
