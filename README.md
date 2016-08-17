@@ -29,4 +29,3 @@ xmh57jrzrnw6insl - Torch Search Engine
 ##TODO
 - add recursive flag to client application
 - exclude image files from website fetch
-- implement link extracting - close to a working crawler
