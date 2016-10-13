@@ -1,6 +1,6 @@
 extern crate capnp;
 extern crate docopt;
-extern crate onion_spider;
+extern crate polzat;
 extern crate rustc_serialize;
 
 use std::net::{SocketAddr, TcpStream};
@@ -9,16 +9,16 @@ use std::str::FromStr;
 use capnp::message::ReaderOptions;
 use capnp::serialize::{read_message, write_message};
 use docopt::Docopt;
-use onion_spider::{create_crawl_request, create_stats_request};
-use onion_spider::message_capnp::onion_spider_message::message_type::{StatsReply};
+use polzat::{create_crawl_request, create_stats_request};
+use polzat::message_capnp::polzat_message::message_type::{StatsReply};
 
 const USAGE: &'static str = "
-Interact with SpiderOnion application
+Interact with PolzatD application
 
 Usage:
-    yogi crawl <site> [--ip-address=<ip>] [--port=<port>]
-    yogi stats
-    yogi (-h | --help)
+    polzat crawl <site> [--ip-address=<ip>] [--port=<port>]
+    polzat stats
+    polzat (-h | --help)
 
 Options:
     -h --help           Show this screen.
@@ -81,15 +81,15 @@ fn main() {
             _ => {},
         }
 
-        //read spider onion message
+        //read polzat message
         let reader = match read_message(&mut stream, ReaderOptions::default()) {
             Ok(reader) => reader,
             Err(_) => panic!("unable to read message from tcp stream"),
         };
 
-        let msg = match reader.get_root::<onion_spider::message_capnp::onion_spider_message::Reader>() {
+        let msg = match reader.get_root::<polzat::message_capnp::polzat_message::Reader>() {
             Ok(msg) => msg,
-            Err(_) => panic!("unable to parse onion spider message"),
+            Err(_) => panic!("unable to parse polzat message"),
         };
 
         //

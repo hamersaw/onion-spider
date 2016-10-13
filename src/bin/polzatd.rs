@@ -1,6 +1,6 @@
 extern crate capnp;
 extern crate docopt;
-extern crate onion_spider;
+extern crate polzat;
 extern crate rustc_serialize;
 
 use std::net::{SocketAddr, TcpListener};
@@ -11,18 +11,18 @@ use std::thread;
 use capnp::message::ReaderOptions;
 use capnp::serialize::{read_message, write_message};
 use docopt::Docopt;
-use onion_spider::{create_stats_reply};
-use onion_spider::fetcher::{Fetcher, WgetFetcher};
-use onion_spider::frontier::{FIFOFrontier, Frontier};
-use onion_spider::link_extractor::IterativeExtractor;
-use onion_spider::message_capnp::onion_spider_message::message_type::{CrawlRequest, StatsRequest};
+use polzat::{create_stats_reply};
+use polzat::fetcher::{Fetcher, WgetFetcher};
+use polzat::frontier::{FIFOFrontier, Frontier};
+use polzat::link_extractor::IterativeExtractor;
+use polzat::message_capnp::polzat_message::message_type::{CrawlRequest, StatsRequest};
 
 const USAGE: &'static str = "
-OnionSpider application used for distributed crawling of TOR hidden services
+PolzatD application used for distributed web crawling and scraping
 
 Usage:
-    onion_spider [--site-directory=<dir>] [--thread-count=<thread>] [--ip-address=<ip>] [--port=<port>]
-    onion_spider (-h | --help)
+    polzatd [--site-directory=<dir>] [--thread-count=<thread>] [--ip-address=<ip>] [--port=<port>]
+    polzatd (-h | --help)
 
 Options:
     -h --help                   Show this screen.
@@ -80,15 +80,15 @@ fn main() {
             thread::spawn(move || {
                 let mut stream = stream.unwrap();
 
-                //read spider onion message
+                //read polzat message
                 let reader = match read_message(&mut stream, ReaderOptions::default()) {
                     Ok(reader) => reader,
                     Err(_) => panic!("unable to read message from tcp stream"),
                 };
 
-                let msg = match reader.get_root::<onion_spider::message_capnp::onion_spider_message::Reader>() {
+                let msg = match reader.get_root::<polzat::message_capnp::polzat_message::Reader>() {
                     Ok(msg) => msg,
-                    Err(_) => panic!("unable to parse onion spider message"),
+                    Err(_) => panic!("unable to parse polzat message"),
                 };
 
                 match msg.get_message_type().which() {
@@ -121,50 +121,3 @@ fn main() {
 
     handle.join().unwrap();
 }
-
-/*fn main() {
-    //connect to site through proxy
-    let proxy_addr = SocketAddr::from_str("127.0.0.1:9050").unwrap();
-
-    let (mut onion_addrs, mut crawled_addrs) = (vec!("xmh57jrzrnw6insl".to_string()), Vec::new());
-    while onion_addrs.len() != 0 {
-        let onion_addr = onion_addrs.pop().unwrap();
-        let target_addr = TargetAddr::Domain(format!("{}.onion", onion_addr).to_string(), 80);
-
-        match crawl(&proxy_addr, target_addr) {
-            Ok(found_addrs) => {
-                for addr in found_addrs {
-                    println!("found: {}", addr);
-                    onion_addrs.push(addr);
-                }
-            },
-            Err(_) => println!("error crawling {}", onion_addr),
-        }
-
-        crawled_addrs.push(onion_addr);
-    }
-
-    println!("crawled {} addresses", crawled_addrs.len());
-}
-
-fn crawl(proxy_addr: &SocketAddr, target_addr: TargetAddr) -> Result<Vec<String>, Error> {
-    //open stream
-    let mut stream = try!(Socks5Stream::connect(proxy_addr, target_addr));
-
-    //write HTTP GET
-    try!(stream.write_all(b"GET / HTTP/1.0\r\n\r\n"));
-
-    //read response
-    let mut buf = Vec::new();
-    let _ = try!(stream.read_to_end(&mut buf));
-    let response_str = try!(std::str::from_utf8(&buf));
-
-    //search for .onion addresses in response
-    let re = Regex::new("(http|https)://(.{16}).onion").unwrap();
-    let mut found_addrs = Vec::new();
-    for onion_addr in re.captures_iter(response_str) {
-        found_addrs.push(onion_addr.at(2).unwrap().to_string());
-    }
-
-    Ok(found_addrs)
-}*/

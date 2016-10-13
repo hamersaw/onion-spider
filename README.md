@@ -1,24 +1,20 @@
-#onion-spider
+#polzat
 
 ##Overview
-Web spider for TOR written in rust. Consists of a daemon application and a
-corresponding client application. Can schedule crawls with the option to make 
-it recursive through the client applicataion. Client application is also able
-to retreive elementary statistics from daemon appliction. Future work is to 
-implement a distributed hash table to allow distributed crawls.
+Web crawler/scraper written in rust. Purpose focuses on academia and 
+analysis on differential treatment of anonymous users.
 
 ##Requirements
 - tor
 - torsocks
-- wget
 
 ##Components
-####onion-spider
+####polzatd
 This is the daemon application. Currently it is configured through command line
 arguments using the docopt crate. Once finished it will be configured with a 
 toml file.
 
-####yogi
+####polzat
 The client application. Configured through command line arguements using the 
 docopt crate. Has two operations, namely crawl and stats. Crawl is issued with 
 a list of onion hidden servies to crawl. Stats requires no arguments.
@@ -27,5 +23,6 @@ a list of onion hidden servies to crawl. Stats requires no arguments.
 xmh57jrzrnw6insl - Torch Search Engine
 
 ##TODO
+- finish modification to polzat
 - add recursive flag to client application
 - exclude image files from website fetch
