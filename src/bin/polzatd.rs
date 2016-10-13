@@ -6,8 +6,8 @@ extern crate rustc_serialize;
 use std::sync::{Arc, RwLock};
 
 use docopt::Docopt;
-use polzat::fetcher::{FetcherV2, LibcurlFetcher};
-use polzat::frontier::{FrontierV2, PriorityFrontier};
+use polzat::fetcher::{Fetcher, LibcurlFetcher};
+use polzat::frontier::{Frontier, PriorityFrontier};
 use polzat::link_extractor::IterativeExtractor;
 
 use grpc::error::GrpcError;

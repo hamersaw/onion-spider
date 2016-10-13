@@ -12,7 +12,6 @@ extern crate protobuf;
 extern crate regex;
 
 use std::cmp::{Ordering, PartialOrd};
-use std::io::Error;
 
 use polzat_pb::{ScheduleTaskReply, ScheduleTaskRequest, ScheduleTaskRequest_UrlType, ScheduleTaskRequest_Operation};
 
