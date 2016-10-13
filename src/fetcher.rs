@@ -60,3 +60,27 @@ impl Fetcher for WgetFetcher {
         Ok(())
     }
 }
+
+/*
+ * LibcurlFetcher
+ */
+pub trait FetcherV2 {
+    fn fetch(&self, polzat_task: PolzatTask) -> Result<String, ()>;
+}
+
+pub struct LibcurlFetcher {
+    
+}
+
+impl LibcurlFetcher {
+    pub fn new() -> LibcurlFetcher {
+        LibcurlFetcher {
+        }
+    }
+}
+
+impl FetcherV2 for LibcurlFetcher {
+    fn fetch(&self, polzat_task: PolzatTask) -> Result<String, ()> {
+        unimplemented!();
+    }
+}

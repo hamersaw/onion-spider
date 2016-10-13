@@ -1,5 +1,8 @@
+use std::collections::{BinaryHeap, HashMap};
 use std::io::Error;
 use std::sync::RwLock;
+
+use super::PolzatTask;
 
 pub trait Frontier {
     fn add_site(&self, site: &str) -> Result<(), Error>;
@@ -7,6 +10,9 @@ pub trait Frontier {
     fn len(&self) -> u64;
 }
 
+/*
+ * FIFOFrontier implementation
+ */
 pub struct FIFOFrontier {
     buffer: RwLock<Vec<String>>,
     crawled: RwLock<Vec<String>>,
@@ -64,5 +70,42 @@ impl Frontier for FIFOFrontier {
     fn len(&self) -> u64 {
         let read_buffer = self.buffer.read().unwrap();
         read_buffer.len() as u64
+    }
+}
+
+/*
+ * PriorityFrontier Implementation
+ */
+pub trait FrontierV2 {
+    fn push(&self, polzat_task: PolzatTask) -> Result<(), Error>;
+    fn next(&self) -> Option<PolzatTask>;
+    fn len(&self) -> u64;
+}
+
+pub struct PriorityFrontier {
+    queue: RwLock<BinaryHeap<PolzatTask>>,
+    seen: HashMap<u32, Vec<String>>,
+}
+
+impl PriorityFrontier {
+    fn new() -> PriorityFrontier {
+        PriorityFrontier {
+            queue: RwLock::new(BinaryHeap::new()),
+            seen: HashMap::new(),
+        }
+    }
+}
+
+impl FrontierV2 for PriorityFrontier {
+    fn push(&self, polzat_task: PolzatTask) -> Result<(), Error> {
+        unimplemented!();
+    }
+
+    fn next(&self) -> Option<PolzatTask> {
+        unimplemented!();
+    }
+
+    fn len(&self) -> u64 {
+        unimplemented!();
     }
 }
