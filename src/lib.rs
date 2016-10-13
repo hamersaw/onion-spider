@@ -19,7 +19,7 @@ pub mod message_capnp {
 use std::cmp::{Ordering, PartialOrd};
 use std::io::Error;
 
-use polzat_pb::{ScheduleTaskRequest, ScheduleTaskRequest_UrlType, ScheduleTaskRequest_Operation};
+use polzat_pb::{ScheduleTaskReply, ScheduleTaskRequest, ScheduleTaskRequest_UrlType, ScheduleTaskRequest_Operation};
 use capnp::message::{Builder, HeapAllocator};
 
 /*
@@ -78,6 +78,10 @@ impl PartialOrd for PolzatTask {
 /*
  * Create Protobuf Messages
  */
+pub fn create_schedule_task_reply() -> ScheduleTaskReply {
+    ScheduleTaskReply::new()
+}
+
 pub fn create_schedule_task_request(execution_id: u32, priority: u8, url: &str, url_type: UrlType, operation: Operation) -> ScheduleTaskRequest {
     let mut request = ScheduleTaskRequest::new();
     request.set_execution_id(execution_id);

@@ -19,7 +19,7 @@ Interact with PolzatD application
 
 Usage:
     polzat crawl <url> [--ip-address=<ip>] [--port=<port>]
-    polzat stats
+    polzat scrape <url> [--ip-address=<ip>] [--port=<port>]
     polzat (-h | --help)
 
 Options:
@@ -31,7 +31,6 @@ Options:
 #[derive(Debug, RustcDecodable)]
 struct Args {
     cmd_crawl: bool,
-    cmd_stats: bool,
     arg_url: String,
     flag_ip_address: String,
     flag_port: u16,
@@ -45,14 +44,15 @@ fn main() {
     let client = PolzatClient::new(&args.flag_ip_address, args.flag_port, false).unwrap();
 
     if args.cmd_crawl {
-        println!("sending request");
         let request = polzat::create_schedule_task_request(0, 0, &args.arg_url, UrlType::Web, Operation::Crawl);
-        println!("waiting for response");
         let response = client.ScheduleTask(request);
 
         println!("response: {:?}", response);
-    } else if args.cmd_stats {
+    } else if args.cmd_scrape {
+        let request = polzat::create_schedule_task_request(0, 0, &args.arg_url, UrlType::Web, Operation::Scrape);
+        let response = client.ScheduleTask(request);
 
+        println!("response: {:?}", response);
     }
 }
 
