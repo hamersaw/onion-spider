@@ -2,9 +2,6 @@ extern crate docopt;
 extern crate polzat;
 extern crate rustc_serialize;
 
-use std::net::{SocketAddr, TcpStream};
-use std::str::FromStr;
-
 use docopt::Docopt;
 use polzat::{UrlType, Operation};
 use polzat::polzat_pb_grpc::{Polzat, PolzatClient};

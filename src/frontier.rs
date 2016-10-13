@@ -1,5 +1,5 @@
 use std::collections::{BinaryHeap, HashMap};
-use std::io::Error;
+use std::io::{Error, ErrorKind};
 use std::sync::RwLock;
 
 use super::PolzatTask;
@@ -77,35 +77,61 @@ impl Frontier for FIFOFrontier {
  * PriorityFrontier Implementation
  */
 pub trait FrontierV2 {
-    fn push(&self, polzat_task: PolzatTask) -> Result<(), Error>;
-    fn next(&self) -> Option<PolzatTask>;
-    fn len(&self) -> u64;
+    fn push(&mut self, polzat_task: PolzatTask) -> Result<(), Error>;
+    fn pop(&mut self) -> Option<PolzatTask>;
+    fn peek(&mut self) -> Option<&PolzatTask>;
+    fn len(&self) -> usize;
 }
 
 pub struct PriorityFrontier {
-    queue: RwLock<BinaryHeap<PolzatTask>>,
+    queue: BinaryHeap<PolzatTask>,
     seen: HashMap<u32, Vec<String>>,
 }
 
 impl PriorityFrontier {
     pub fn new() -> PriorityFrontier {
         PriorityFrontier {
-            queue: RwLock::new(BinaryHeap::new()),
+            queue: BinaryHeap::new(),
             seen: HashMap::new(),
         }
     }
 }
 
 impl FrontierV2 for PriorityFrontier {
-    fn push(&self, polzat_task: PolzatTask) -> Result<(), Error> {
-        unimplemented!();
+    fn push(&mut self, polzat_task: PolzatTask) -> Result<(), Error> {
+        //check for existance in 'seen'
+        let mut urls = self.seen.entry(polzat_task.execution_id).or_insert(vec!());
+        if contains(urls, &polzat_task.url) {
+            return Err(Error::new(ErrorKind::Other, format!("execution_id '{}' has already processed url '{}'", polzat_task.execution_id, polzat_task.url)))
+        }
+
+        urls.push(polzat_task.url.to_owned());
+
+        //add polzat task to queue
+        self.queue.push(polzat_task);
+        
+        Ok(())
     }
 
-    fn next(&self) -> Option<PolzatTask> {
-        unimplemented!();
+    fn pop(&mut self) -> Option<PolzatTask> {
+        self.queue.pop()
     }
 
-    fn len(&self) -> u64 {
-        unimplemented!();
+    fn peek(&mut self) -> Option<&PolzatTask> {
+        self.queue.peek()
     }
+
+    fn len(&self) -> usize {
+        self.queue.len()
+    }
+}
+
+fn contains(vec: &Vec<String>, value: &str) -> bool {
+    for v in vec {
+        if v == value {
+            return true
+        }
+    }
+
+    return false
 }

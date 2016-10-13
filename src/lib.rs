@@ -38,7 +38,7 @@ pub struct PolzatTask {
 }
 
 impl PolzatTask {
-    fn new(execution_id: u32, priority: u8, url: String, url_type: UrlType, operation: Operation) -> PolzatTask {
+    pub fn new(execution_id: u32, priority: u8, url: String, url_type: UrlType, operation: Operation) -> PolzatTask {
         PolzatTask {
             execution_id: execution_id,
             priority: priority,

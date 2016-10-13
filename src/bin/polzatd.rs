@@ -3,21 +3,17 @@ extern crate grpc;
 extern crate polzat;
 extern crate rustc_serialize;
 
-use std::net::{SocketAddr, TcpListener};
-use std::str::FromStr;
-use std::sync::Arc;
-use std::thread;
+use std::sync::{Arc, RwLock};
 
 use docopt::Docopt;
-use polzat::fetcher::{Fetcher, WgetFetcher};
-use polzat::frontier::{FIFOFrontier, Frontier};
 use polzat::fetcher::{FetcherV2, LibcurlFetcher};
 use polzat::frontier::{FrontierV2, PriorityFrontier};
 use polzat::link_extractor::IterativeExtractor;
 
 use grpc::error::GrpcError;
 use grpc::result::GrpcResult;
-use polzat::polzat_pb::{ScheduleTaskReply, ScheduleTaskRequest};
+use polzat::{PolzatTask, Operation, UrlType};
+use polzat::polzat_pb::{ScheduleTaskReply, ScheduleTaskRequest, ScheduleTaskRequest_UrlType, ScheduleTaskRequest_Operation};
 use polzat::polzat_pb_grpc::{Polzat, PolzatServer};
 
 const USAGE: &'static str = "
@@ -45,28 +41,46 @@ fn main() {
                         .unwrap_or_else(|e| e.exit());
 
     let fetcher = LibcurlFetcher::new();
-    let frontier = PriorityFrontier::new();
+    let frontier = Arc::new(RwLock::new(PriorityFrontier::new()));
 
-    let _polzatd = PolzatServer::new(args.flag_port, PolzatD::new());
+    let _polzatd = PolzatServer::new(args.flag_port, PolzatD::new(frontier.clone()));
     loop {
         std::thread::park();
     }
 }
 
 struct PolzatD {
+    frontier: Arc<RwLock<PriorityFrontier>>,
 }
 
 impl PolzatD {
-    pub fn new() -> PolzatD {
+    pub fn new(frontier: Arc<RwLock<PriorityFrontier>>) -> PolzatD {
         PolzatD {
+            frontier: frontier,
         }
     }
 }
 
 impl Polzat for PolzatD {
     fn ScheduleTask(&self, request: ScheduleTaskRequest) -> GrpcResult<ScheduleTaskReply> {
-        println!("scheduleing task: {:?}", request);
-
-        Err(GrpcError::Other("unimplemented!"))
+        let polzat_task = PolzatTask::new(
+                request.get_execution_id(), 
+                request.get_priority() as u8,
+                request.get_url().to_owned(),
+                match request.get_url_type() {
+                    ScheduleTaskRequest_UrlType::Web => UrlType::Web,
+                    ScheduleTaskRequest_UrlType::TorHiddenService => UrlType::TorHiddenService,
+                },
+                match request.get_operation() {
+                    ScheduleTaskRequest_Operation::Crawl => Operation::Crawl,
+                    ScheduleTaskRequest_Operation::Scrape => Operation::Scrape,
+                },
+            );
+        
+        let mut frontier = self.frontier.write().unwrap();
+        match frontier.push(polzat_task) {
+            Ok(_) => Ok(polzat::create_schedule_task_reply()),
+            Err(_) => Err(GrpcError::Other("unable to push task to frontier")),
+        }
     }
 }
