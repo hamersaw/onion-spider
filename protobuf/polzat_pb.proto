@@ -1,0 +1,35 @@
+syntax="proto3";
+
+/*
+ * Messages
+ */
+
+message ScheduleTaskRequest {
+    uint32 execution_id = 1;
+    uint32 priority = 2;
+    string url = 3;
+
+    enum UrlType {
+        Web = 0;
+        TorHiddenService = 1;
+    }
+
+    UrlType url_type = 4;
+
+    enum Operation {
+        Crawl = 0;
+        Scrape = 1;
+    }
+
+    Operation operation = 5;
+}
+
+message ScheduleTaskReply {
+}
+
+/*
+ * Define Service
+ */
+service Polzat {
+    rpc ScheduleTask(ScheduleTaskRequest) returns(ScheduleTaskReply) {}
+}
