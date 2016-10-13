@@ -88,7 +88,7 @@ pub struct PriorityFrontier {
 }
 
 impl PriorityFrontier {
-    fn new() -> PriorityFrontier {
+    pub fn new() -> PriorityFrontier {
         PriorityFrontier {
             queue: RwLock::new(BinaryHeap::new()),
             seen: HashMap::new(),

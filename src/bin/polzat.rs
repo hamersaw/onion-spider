@@ -9,6 +9,8 @@ use std::str::FromStr;
 use capnp::message::ReaderOptions;
 use capnp::serialize::{read_message, write_message};
 use docopt::Docopt;
+use polzat::{UrlType, Operation};
+use polzat::polzat_pb_grpc::{Polzat, PolzatClient};
 use polzat::{create_crawl_request, create_stats_request};
 use polzat::message_capnp::polzat_message::message_type::{StatsReply};
 
@@ -16,7 +18,7 @@ const USAGE: &'static str = "
 Interact with PolzatD application
 
 Usage:
-    polzat crawl <site> [--ip-address=<ip>] [--port=<port>]
+    polzat crawl <url> [--ip-address=<ip>] [--port=<port>]
     polzat stats
     polzat (-h | --help)
 
@@ -30,12 +32,31 @@ Options:
 struct Args {
     cmd_crawl: bool,
     cmd_stats: bool,
-    arg_site: Option<Vec<String>>,
+    arg_url: String,
     flag_ip_address: String,
-    flag_port: i32,
+    flag_port: u16,
 }
 
 fn main() {
+    let args: Args = Docopt::new(USAGE)
+                        .and_then(|d| d.decode())
+                        .unwrap_or_else(|e| e.exit());
+
+    let client = PolzatClient::new(&args.flag_ip_address, args.flag_port, false).unwrap();
+
+    if args.cmd_crawl {
+        println!("sending request");
+        let request = polzat::create_schedule_task_request(0, 0, &args.arg_url, UrlType::Web, Operation::Crawl);
+        println!("waiting for response");
+        let response = client.ScheduleTask(request);
+
+        println!("response: {:?}", response);
+    } else if args.cmd_stats {
+
+    }
+}
+
+/*fn main() {
     let args: Args = Docopt::new(USAGE)
                         .and_then(|d| d.decode())
                         .unwrap_or_else(|e| e.exit());
@@ -101,4 +122,4 @@ fn main() {
             _ => panic!("expecting a stats reply from a stats request"),
         }
     }
-}
+}*/

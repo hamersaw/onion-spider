@@ -1,5 +1,6 @@
 extern crate capnp;
 extern crate docopt;
+extern crate grpc;
 extern crate polzat;
 extern crate rustc_serialize;
 
@@ -14,10 +15,69 @@ use docopt::Docopt;
 use polzat::{create_stats_reply};
 use polzat::fetcher::{Fetcher, WgetFetcher};
 use polzat::frontier::{FIFOFrontier, Frontier};
+use polzat::fetcher::{FetcherV2, LibcurlFetcher};
+use polzat::frontier::{FrontierV2, PriorityFrontier};
 use polzat::link_extractor::IterativeExtractor;
 use polzat::message_capnp::polzat_message::message_type::{CrawlRequest, StatsRequest};
 
+use grpc::error::GrpcError;
+use grpc::result::GrpcResult;
+use polzat::polzat_pb::{ScheduleTaskReply, ScheduleTaskRequest};
+use polzat::polzat_pb_grpc::{Polzat, PolzatServer};
+
 const USAGE: &'static str = "
+PolzatD application used for distributed web crawling and scraping
+
+Usage:
+    polzatd [--thread-count=<t>] [--port=<p>]
+    polzatd (-h | --help)
+
+Options:
+    --thread-count=<t>          Number for fetching threads [default: 10].
+    --port=<p>                  Port of capnproto socket [default: 12289].
+    -h --help                   Display this screen.
+";
+
+#[derive(Debug, RustcDecodable)]
+struct Args {
+    flag_thread_count: usize,
+    flag_port: u16,
+}
+
+fn main() {
+    let args: Args = Docopt::new(USAGE)
+                        .and_then(|d| d.decode())
+                        .unwrap_or_else(|e| e.exit());
+
+    let fetcher = LibcurlFetcher::new();
+    let frontier = PriorityFrontier::new();
+
+    let _polzatd = PolzatServer::new(args.flag_port, PolzatD::new());
+    loop {
+        std::thread::park();
+    }
+}
+
+struct PolzatD {
+
+}
+
+impl PolzatD {
+    pub fn new() -> PolzatD {
+        PolzatD {
+        }
+    }
+}
+
+impl Polzat for PolzatD {
+    fn ScheduleTask(&self, request: ScheduleTaskRequest) -> GrpcResult<ScheduleTaskReply> {
+        println!("scheduleing task: {:?}", request);
+
+        Err(GrpcError::Other("unimplemented!"))
+    }
+}
+
+/*const USAGE: &'static str = "
 PolzatD application used for distributed web crawling and scraping
 
 Usage:
@@ -25,11 +85,11 @@ Usage:
     polzatd (-h | --help)
 
 Options:
-    -h --help                   Show this screen.
     --site-directory=<dir>      Directory to download sites to [default: /tmp/sites].
     --thread-count=<thread>     Number of fetching threads [default: 10].
     --ip-address=<ip>           IP address of application [default: 127.0.0.1].
     --port=<port>               Port of application [default: 12289].
+    -h --help                   Show this screen.
 ";
 
 #[derive(Debug, RustcDecodable)]
@@ -39,7 +99,6 @@ struct Args {
     flag_ip_address: String,
     flag_port: i32,
 }
-
 fn main() {
     let args: Args = Docopt::new(USAGE)
                         .and_then(|d| d.decode())
@@ -120,4 +179,4 @@ fn main() {
     });
 
     handle.join().unwrap();
-}
+}*/

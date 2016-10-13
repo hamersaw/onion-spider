@@ -7,6 +7,8 @@ use std::sync::Arc;
 use std::thread::sleep;
 use std::time::Duration;
 
+use super::PolzatTask;
+
 pub trait Fetcher {
     fn start(&self) -> Result<(), Error>;
     fn fetch(&self, site: &str) -> Result<(), Error>;

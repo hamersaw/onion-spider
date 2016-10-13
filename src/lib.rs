@@ -1,9 +1,15 @@
 pub mod fetcher;
 pub mod frontier;
 pub mod link_extractor;
+pub mod polzat_pb;
+pub mod polzat_pb_grpc;
 
 extern crate capnp;
 extern crate glob;
+extern crate grpc;
+extern crate futures;
+extern crate futures_cpupool;
+extern crate protobuf;
 extern crate regex;
 
 pub mod message_capnp {
@@ -13,19 +19,20 @@ pub mod message_capnp {
 use std::cmp::{Ordering, PartialOrd};
 use std::io::Error;
 
+use polzat_pb::{ScheduleTaskRequest, ScheduleTaskRequest_UrlType, ScheduleTaskRequest_Operation};
 use capnp::message::{Builder, HeapAllocator};
 
 /*
  * PolzatTask definition
  */
-enum Operation {
-    Crawl,
-    Scrape,
-}
-
-enum UrlType {
+pub enum UrlType {
     Web,
     TorHiddenService,
+}
+
+pub enum Operation {
+    Crawl,
+    Scrape,
 }
 
 pub struct PolzatTask {
@@ -66,6 +73,28 @@ impl PartialOrd for PolzatTask {
     fn partial_cmp(&self, other: &PolzatTask) -> Option<Ordering> {
         Some(self.cmp(other))
     }
+}
+
+/*
+ * Create Protobuf Messages
+ */
+pub fn create_schedule_task_request(execution_id: u32, priority: u8, url: &str, url_type: UrlType, operation: Operation) -> ScheduleTaskRequest {
+    let mut request = ScheduleTaskRequest::new();
+    request.set_execution_id(execution_id);
+    request.set_priority(priority as u32);
+    request.set_url(url.to_owned());
+
+    match url_type {
+        UrlType::Web => request.set_url_type(ScheduleTaskRequest_UrlType::Web),
+        UrlType::TorHiddenService => request.set_url_type(ScheduleTaskRequest_UrlType::TorHiddenService), 
+    }
+
+    match operation {
+        Operation::Crawl => request.set_operation(ScheduleTaskRequest_Operation::Crawl),
+        Operation::Scrape => request.set_operation(ScheduleTaskRequest_Operation::Scrape),
+    }
+
+    request
 }
 
 /*
