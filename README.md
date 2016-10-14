@@ -23,6 +23,6 @@ a list of onion hidden servies to crawl. Stats requires no arguments.
 xmh57jrzrnw6insl - Torch Search Engine
 
 ##TODO
-- finish modification to polzat
-- add recursive flag to client application
-- exclude image files from website fetch
+- look at robots.txt
+- tor crawl
+- scrape

@@ -2,7 +2,7 @@ use std::io::Error;
 
 use regex::Regex;
 
-const WEB_URL_REGEX: &'static str = "(?:http|https)://www\\.([a-zA-Z0-9_\\.]*)(\\.com|\\.edu|\\.gov)(/[a-zA-Z0-9_\\.]*)*";
+const WEB_URL_REGEX: &'static str = "(?:http|https)://www\\.([a-zA-Z0-9_\\.]*)(\\.com|\\.edu|\\.gov|\\.net|\\.org)(/[a-zA-Z0-9_\\.]*)*";
 const TOR_HIDDEN_SERVICE_URL_REGEX: &'static str = "(http|https)://(?:.{16}).onion(/[/a-zA-Z0-9_\\.]*)*";
 
 pub trait LinkExtractor {

@@ -16,32 +16,32 @@ use std::cmp::{Ordering, PartialOrd};
 use std::sync::{Arc, RwLock};
 
 use fetcher::{Fetcher, LibCurlFetcher};
-use frontier::PriorityFrontier;
+use frontier::{Frontier, PriorityFrontier};
 use link_extractor::{BothExtractor, LinkExtractor, TorHiddenServiceExtractor, WebExtractor};
 use polzat_pb::{ScheduleTaskReply, ScheduleTaskRequest, ScheduleTaskRequest_UrlType, ScheduleTaskRequest_Operation};
 
 /*
  * PolzatTask definition
  */
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum UrlType {
     Web,
     TorHiddenService,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum Operation {
     Crawl,
     Scrape,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum FetcherType {
     LibCurl,
     Empty,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum LinkExtractorType {
     Web,
     TorHiddenService,
@@ -98,6 +98,8 @@ impl PartialOrd for PolzatTask {
  * Execute Polzat Task
  */
 pub fn execute_polzat_crawl(polzat_task: PolzatTask, frontier: Arc<RwLock<PriorityFrontier>>) -> Result<(), Error> {
+    println!("EXECUTING: {:?}", polzat_task);
+
     let fetcher: Box<Fetcher> = match polzat_task.fetcher_type {
         FetcherType::LibCurl => Box::new(LibCurlFetcher::new()) as Box<Fetcher>,
         _ => return Err(Error::new(ErrorKind::Other, "Unable to execute polzat task with empty fetcher_type")),
@@ -112,6 +114,21 @@ pub fn execute_polzat_crawl(polzat_task: PolzatTask, frontier: Arc<RwLock<Priori
 
     let response = try!(fetcher.fetch(&polzat_task));
     let urls = try!(link_extractor.extract(&response));
+
+    let mut frontier = frontier.write().unwrap();
+    for url in urls {
+        frontier.push(
+                PolzatTask::new(
+                    polzat_task.execution_id,
+                    polzat_task.priority,
+                    url,
+                    polzat_task.url_type.clone(),//TODO change to type of URL returned from link extractor
+                    polzat_task.operation.clone(),
+                    polzat_task.fetcher_type.clone(),
+                    polzat_task.link_extractor_type.clone(),
+                )
+            );
+    }
 
     Ok(())
 }
