@@ -120,7 +120,7 @@ pub fn execute_polzat_crawl(polzat_task: PolzatTask, frontier: Arc<RwLock<Priori
     let mut frontier = frontier.write().unwrap();
     let mut url_validator = url_validator.write().unwrap();
     for url in urls.iter().filter(|x| url_validator.is_valid(x)) {
-        frontier.push(
+        let _ = frontier.push(
                 PolzatTask::new(
                     polzat_task.execution_id,
                     polzat_task.priority,
