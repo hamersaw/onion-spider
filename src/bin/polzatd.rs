@@ -15,6 +15,7 @@ use polzat::{FetcherType, LinkExtractorType, PolzatTask, Operation, UrlType};
 use polzat::frontier::{Frontier, PriorityFrontier};
 use polzat::polzat_pb::{ScheduleTaskReply, ScheduleTaskRequest, ScheduleTaskRequest_UrlType, ScheduleTaskRequest_Operation};
 use polzat::polzat_pb_grpc::{Polzat, PolzatServer};
+use polzat::url_validator::RobotsValidator;
 use threadpool::ThreadPool;
 
 const USAGE: &'static str = "
@@ -41,9 +42,12 @@ fn main() {
                         .and_then(|d| d.decode())
                         .unwrap_or_else(|e| e.exit());
 
-    //let fetcher = LibcurlFetcher::new();
-    let frontier = Arc::new(RwLock::new(PriorityFrontier::new()));
+    //initialize variables
     let thread_pool = ThreadPool::new(args.flag_thread_count);
+
+    let frontier = Arc::new(RwLock::new(PriorityFrontier::new()));
+    let url_validator = Arc::new(RwLock::new(RobotsValidator::new()));
+
     let _polzatd = PolzatServer::new(args.flag_port, PolzatD::new(frontier.clone()));
     let active_tasks = Arc::new(AtomicUsize::new(0));
 
@@ -69,13 +73,14 @@ fn main() {
 
         //add new job to thread pool
         let thread_frontier = frontier.clone();
+        let thread_url_validator = url_validator.clone();
         thread_pool.execute(move || {
             //execute polzat task
             let _ = clone_active_tasks.fetch_add(1, Ordering::Relaxed);
 
             let polzat_task = polzat_task.unwrap();
             let _ = match polzat_task.operation {
-                Operation::Crawl => polzat::execute_polzat_crawl(polzat_task, thread_frontier),
+                Operation::Crawl => polzat::execute_polzat_crawl(polzat_task, thread_frontier, thread_url_validator),
                 Operation::Scrape => polzat::execute_polzat_scrape(polzat_task),
             };
 

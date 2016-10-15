@@ -3,6 +3,7 @@ pub mod frontier;
 pub mod link_extractor;
 pub mod polzat_pb;
 pub mod polzat_pb_grpc;
+pub mod url_validator;
 
 extern crate curl;
 extern crate grpc;
@@ -19,6 +20,7 @@ use fetcher::{Fetcher, LibCurlFetcher};
 use frontier::{Frontier, PriorityFrontier};
 use link_extractor::{BothExtractor, LinkExtractor, TorHiddenServiceExtractor, WebExtractor};
 use polzat_pb::{ScheduleTaskReply, ScheduleTaskRequest, ScheduleTaskRequest_UrlType, ScheduleTaskRequest_Operation};
+use url_validator::{RobotsValidator, UrlValidator};
 
 /*
  * PolzatTask definition
@@ -97,7 +99,7 @@ impl PartialOrd for PolzatTask {
 /*
  * Execute Polzat Task
  */
-pub fn execute_polzat_crawl(polzat_task: PolzatTask, frontier: Arc<RwLock<PriorityFrontier>>) -> Result<(), Error> {
+pub fn execute_polzat_crawl(polzat_task: PolzatTask, frontier: Arc<RwLock<PriorityFrontier>>, url_validator: Arc<RwLock<RobotsValidator>>) -> Result<(), Error> {
     println!("EXECUTING: {:?}", polzat_task);
 
     let fetcher: Box<Fetcher> = match polzat_task.fetcher_type {
@@ -116,12 +118,13 @@ pub fn execute_polzat_crawl(polzat_task: PolzatTask, frontier: Arc<RwLock<Priori
     let urls = try!(link_extractor.extract(&response));
 
     let mut frontier = frontier.write().unwrap();
-    for url in urls {
+    let mut url_validator = url_validator.write().unwrap();
+    for url in urls.iter().filter(|x| url_validator.is_valid(x)) {
         frontier.push(
                 PolzatTask::new(
                     polzat_task.execution_id,
                     polzat_task.priority,
-                    url,
+                    url.to_owned(),
                     polzat_task.url_type.clone(),//TODO change to type of URL returned from link extractor
                     polzat_task.operation.clone(),
                     polzat_task.fetcher_type.clone(),
