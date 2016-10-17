@@ -25,7 +25,7 @@ use url_validator::{RobotsValidator, UrlValidator};
 /*
  * PolzatTask definition
  */
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum UrlType {
     Web,
     TorHiddenService,

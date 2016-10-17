@@ -1,12 +1,17 @@
 use std::io::Error;
 
+use std::collections::HashMap;
+
 use regex::Regex;
+
+use super::UrlType;
 
 const WEB_URL_REGEX: &'static str = "(?:http|https)://www\\.([a-zA-Z0-9_\\.]*)(\\.com|\\.edu|\\.gov|\\.net|\\.org)(/[a-zA-Z0-9_?=&\\.]*)*";
 const TOR_HIDDEN_SERVICE_URL_REGEX: &'static str = "(http|https)://(?:.{16}).onion(/[/a-zA-Z0-9_?=&\\.]*)*";
 
 pub trait LinkExtractor {
     fn extract(&self, content: &str) -> Result<Vec<String>, Error>;
+    fn extract_map(&self, content: &str) -> Result<HashMap<UrlType, Vec<String>>, Error>;
 }
 
 /*
@@ -29,6 +34,19 @@ impl LinkExtractor for WebExtractor {
                     .map(|(start, end)| content[start..end].to_owned())
                     .collect::<Vec<String>>())
     }
+
+    fn extract_map(&self, content: &str) -> Result<HashMap<UrlType, Vec<String>>, Error> {
+        let web_regex = Regex::new(WEB_URL_REGEX).unwrap();
+        let web_urls = web_regex.find_iter(content)
+                    .map(|(start, end)| content[start..end].to_owned())
+                    .collect::<Vec<String>>();
+
+        let mut map = HashMap::new();
+        if web_urls.len() != 0 {
+            map.insert(UrlType::Web, web_urls).unwrap();
+        }
+        Ok(map)
+    }
 }
 
 /*
@@ -50,6 +68,19 @@ impl LinkExtractor for TorHiddenServiceExtractor {
         Ok(tor_regex.find_iter(content)
                     .map(|(start, end)| content[start..end].to_owned())
                     .collect::<Vec<String>>())
+    }
+
+    fn extract_map(&self, content: &str) -> Result<HashMap<UrlType, Vec<String>>, Error> {
+        let tor_regex = Regex::new(TOR_HIDDEN_SERVICE_URL_REGEX).unwrap();
+        let tor_urls = tor_regex.find_iter(content)
+                    .map(|(start, end)| content[start..end].to_owned())
+                    .collect::<Vec<String>>();
+
+        let mut map = HashMap::new();
+        if tor_urls.len() != 0 {
+            map.insert(UrlType::TorHiddenService, tor_urls);
+        }
+        Ok(map)
     }
 }
 
@@ -80,5 +111,28 @@ impl LinkExtractor for BothExtractor {
 
         web_urls.append(&mut tor_urls);
         Ok(web_urls)
+    }
+
+    fn extract_map(&self, content: &str) -> Result<HashMap<UrlType, Vec<String>>, Error> {
+        let web_regex = Regex::new(WEB_URL_REGEX).unwrap();
+        let web_urls = web_regex.find_iter(content)
+                    .map(|(start, end)| content[start..end].to_owned())
+                    .collect::<Vec<String>>();
+
+        let tor_regex = Regex::new(WEB_URL_REGEX).unwrap();
+        let tor_urls = tor_regex.find_iter(content)
+                    .map(|(start, end)| content[start..end].to_owned())
+                    .collect::<Vec<String>>();
+
+        let mut map = HashMap::new();
+        if web_urls.len() != 0 {
+            map.insert(UrlType::Web, web_urls);
+        }
+
+        if tor_urls.len() != 0 {
+            map.insert(UrlType::TorHiddenService, tor_urls);
+        }
+
+        Ok(map)
     }
 }

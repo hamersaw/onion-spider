@@ -17,7 +17,7 @@ one operation is implemented, namely 'crawl'.
 xmh57jrzrnw6insl - Torch Search Engine
 
 ##TODO
-- return tor and web urls from link extractor
+- change lib::execute_polzat_crawl(_) to use link_extractor::extract_map(_)
 - stats command
 - perhaps add an allow_regex for robots.txt parsing?
 - tor crawl
