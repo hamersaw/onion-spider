@@ -27,9 +27,18 @@ message ScheduleTaskRequest {
 message ScheduleTaskReply {
 }
 
+message StatsRequest {
+
+}
+
+message StatsReply {
+    uint64 frontier_length = 1;
+}
+
 /*
  * Define Service
  */
 service Polzat {
     rpc ScheduleTask(ScheduleTaskRequest) returns(ScheduleTaskReply) {}
+    rpc Stats(StatsRequest) returns(StatsReply) {}
 }

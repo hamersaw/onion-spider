@@ -17,16 +17,19 @@
 #![allow(unused_imports)]
 #![allow(unused_results)]
 
-use protobuf::Message;
 
 // interface
 
 pub trait Polzat {
     fn ScheduleTask(&self, p: super::polzat_pb::ScheduleTaskRequest) -> ::grpc::result::GrpcResult<super::polzat_pb::ScheduleTaskReply>;
+
+    fn Stats(&self, p: super::polzat_pb::StatsRequest) -> ::grpc::result::GrpcResult<super::polzat_pb::StatsReply>;
 }
 
 pub trait PolzatAsync {
     fn ScheduleTask(&self, p: super::polzat_pb::ScheduleTaskRequest) -> ::grpc::futures_grpc::GrpcFutureSend<super::polzat_pb::ScheduleTaskReply>;
+
+    fn Stats(&self, p: super::polzat_pb::StatsRequest) -> ::grpc::futures_grpc::GrpcFutureSend<super::polzat_pb::StatsReply>;
 }
 
 // sync client
@@ -49,6 +52,10 @@ impl Polzat for PolzatClient {
     fn ScheduleTask(&self, p: super::polzat_pb::ScheduleTaskRequest) -> ::grpc::result::GrpcResult<super::polzat_pb::ScheduleTaskReply> {
         ::futures::Future::wait(self.async_client.ScheduleTask(p))
     }
+
+    fn Stats(&self, p: super::polzat_pb::StatsRequest) -> ::grpc::result::GrpcResult<super::polzat_pb::StatsReply> {
+        ::futures::Future::wait(self.async_client.Stats(p))
+    }
 }
 
 // async client
@@ -56,6 +63,7 @@ impl Polzat for PolzatClient {
 pub struct PolzatAsyncClient {
     grpc_client: ::grpc::client::GrpcClient,
     method_ScheduleTask: ::std::sync::Arc<::grpc::method::MethodDescriptor<super::polzat_pb::ScheduleTaskRequest, super::polzat_pb::ScheduleTaskReply>>,
+    method_Stats: ::std::sync::Arc<::grpc::method::MethodDescriptor<super::polzat_pb::StatsRequest, super::polzat_pb::StatsReply>>,
 }
 
 impl PolzatAsyncClient {
@@ -64,7 +72,13 @@ impl PolzatAsyncClient {
             PolzatAsyncClient {
                 grpc_client: c,
                 method_ScheduleTask: ::std::sync::Arc::new(::grpc::method::MethodDescriptor {
-                    name: "/.Polzat/ScheduleTask".to_string(),
+                    name: "/Polzat/ScheduleTask".to_string(),
+                    streaming: ::grpc::method::GrpcStreaming::Unary,
+                    req_marshaller: Box::new(::grpc::grpc_protobuf::MarshallerProtobuf),
+                    resp_marshaller: Box::new(::grpc::grpc_protobuf::MarshallerProtobuf),
+                }),
+                method_Stats: ::std::sync::Arc::new(::grpc::method::MethodDescriptor {
+                    name: "/Polzat/Stats".to_string(),
                     streaming: ::grpc::method::GrpcStreaming::Unary,
                     req_marshaller: Box::new(::grpc::grpc_protobuf::MarshallerProtobuf),
                     resp_marshaller: Box::new(::grpc::grpc_protobuf::MarshallerProtobuf),
@@ -77,6 +91,10 @@ impl PolzatAsyncClient {
 impl PolzatAsync for PolzatAsyncClient {
     fn ScheduleTask(&self, p: super::polzat_pb::ScheduleTaskRequest) -> ::grpc::futures_grpc::GrpcFutureSend<super::polzat_pb::ScheduleTaskReply> {
         self.grpc_client.call_unary(p, self.method_ScheduleTask.clone())
+    }
+
+    fn Stats(&self, p: super::polzat_pb::StatsRequest) -> ::grpc::futures_grpc::GrpcFutureSend<super::polzat_pb::StatsReply> {
+        self.grpc_client.call_unary(p, self.method_Stats.clone())
     }
 }
 
@@ -96,6 +114,13 @@ impl PolzatAsync for PolzatServerHandlerToAsync {
         let h = self.handler.clone();
         ::grpc::rt::sync_to_async_unary(&self.cpupool, p, move |p| {
             h.ScheduleTask(p)
+        })
+    }
+
+    fn Stats(&self, p: super::polzat_pb::StatsRequest) -> ::grpc::futures_grpc::GrpcFutureSend<super::polzat_pb::StatsReply> {
+        let h = self.handler.clone();
+        ::grpc::rt::sync_to_async_unary(&self.cpupool, p, move |p| {
+            h.Stats(p)
         })
     }
 }
@@ -125,7 +150,7 @@ impl PolzatAsyncServer {
             vec![
                 ::grpc::server::ServerMethod::new(
                     ::std::sync::Arc::new(::grpc::method::MethodDescriptor {
-                        name: "/.Polzat/ScheduleTask".to_string(),
+                        name: "/Polzat/ScheduleTask".to_string(),
                         streaming: ::grpc::method::GrpcStreaming::Unary,
                         req_marshaller: Box::new(::grpc::grpc_protobuf::MarshallerProtobuf),
                         resp_marshaller: Box::new(::grpc::grpc_protobuf::MarshallerProtobuf),
@@ -133,6 +158,18 @@ impl PolzatAsyncServer {
                     {
                         let handler_copy = handler_arc.clone();
                         ::grpc::server::MethodHandlerUnary::new(move |p| handler_copy.ScheduleTask(p))
+                    },
+                ),
+                ::grpc::server::ServerMethod::new(
+                    ::std::sync::Arc::new(::grpc::method::MethodDescriptor {
+                        name: "/Polzat/Stats".to_string(),
+                        streaming: ::grpc::method::GrpcStreaming::Unary,
+                        req_marshaller: Box::new(::grpc::grpc_protobuf::MarshallerProtobuf),
+                        resp_marshaller: Box::new(::grpc::grpc_protobuf::MarshallerProtobuf),
+                    }),
+                    {
+                        let handler_copy = handler_arc.clone();
+                        ::grpc::server::MethodHandlerUnary::new(move |p| handler_copy.Stats(p))
                     },
                 ),
             ],
