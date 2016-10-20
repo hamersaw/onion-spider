@@ -1,11 +1,12 @@
 use std::collections::HashMap;
-//use std::slice::SliceConcatExt;
 use regex::Regex;
+
+use super::UrlType;
 
 use curl::easy::Easy;
 
 pub trait UrlValidator {
-    fn is_valid(&mut self, url: &str) -> bool;
+    fn is_valid(&mut self, url_type: &UrlType, url: &str) -> bool;
 }
 
 /*
@@ -24,7 +25,11 @@ impl RobotsValidator {
 }
 
 impl UrlValidator for RobotsValidator {
-    fn is_valid(&mut self, url: &str) -> bool {
+    fn is_valid(&mut self, url_type: &UrlType, url: &str) -> bool {
+        if *url_type == UrlType::TorHiddenService {
+            return true; //TODO url validate
+        }
+
         //parse out domain and extension of url
         let url_clean = url.replace("https://", "").replace("http://", "");
 
@@ -41,7 +46,6 @@ impl UrlValidator for RobotsValidator {
 
         //retrieve regex from map
         let decline_regex = self.robots_cache.entry(domain.to_owned()).or_insert_with(|| {
-            println!("RETRIEVING {}/robots.txt", domain);
             //fetch and parse robots.txt for domain
             let mut buffer = vec!();
             let mut curl_handle = Easy::new();

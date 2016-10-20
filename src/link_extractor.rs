@@ -43,7 +43,7 @@ impl LinkExtractor for WebExtractor {
 
         let mut map = HashMap::new();
         if web_urls.len() != 0 {
-            map.insert(UrlType::Web, web_urls).unwrap();
+            let _ = map.insert(UrlType::Web, web_urls);
         }
         Ok(map)
     }
@@ -78,7 +78,7 @@ impl LinkExtractor for TorHiddenServiceExtractor {
 
         let mut map = HashMap::new();
         if tor_urls.len() != 0 {
-            map.insert(UrlType::TorHiddenService, tor_urls);
+            let _ = map.insert(UrlType::TorHiddenService, tor_urls);
         }
         Ok(map)
     }
@@ -126,11 +126,11 @@ impl LinkExtractor for BothExtractor {
 
         let mut map = HashMap::new();
         if web_urls.len() != 0 {
-            map.insert(UrlType::Web, web_urls);
+            let _ = map.insert(UrlType::Web, web_urls);
         }
 
         if tor_urls.len() != 0 {
-            map.insert(UrlType::TorHiddenService, tor_urls);
+            let _ = map.insert(UrlType::TorHiddenService, tor_urls);
         }
 
         Ok(map)

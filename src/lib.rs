@@ -115,22 +115,24 @@ pub fn execute_polzat_crawl(polzat_task: PolzatTask, frontier: Arc<RwLock<Priori
     };
 
     let response = try!(fetcher.fetch(&polzat_task));
-    let urls = try!(link_extractor.extract(&response));
-
+    let url_map = try!(link_extractor.extract_map(&response));
+    
     let mut frontier = frontier.write().unwrap();
     let mut url_validator = url_validator.write().unwrap();
-    for url in urls.iter().filter(|x| url_validator.is_valid(x)) {
-        let _ = frontier.push(
-                PolzatTask::new(
-                    polzat_task.execution_id,
-                    polzat_task.priority,
-                    url.to_owned(),
-                    polzat_task.url_type.clone(),//TODO change to type of URL returned from link extractor
-                    polzat_task.operation.clone(),
-                    polzat_task.fetcher_type.clone(),
-                    polzat_task.link_extractor_type.clone(),
-                )
-            );
+    for (key, value) in url_map.iter() {
+        for url in value.iter().filter(|x| url_validator.is_valid(key, x)) {
+            let _ = frontier.push(
+                    PolzatTask::new(
+                        polzat_task.execution_id,
+                        polzat_task.priority,
+                        url.to_owned(),
+                        key.clone(),
+                        Operation::Crawl,
+                        polzat_task.fetcher_type.clone(),
+                        polzat_task.link_extractor_type.clone(),
+                    )
+                );
+        }
     }
 
     Ok(())
