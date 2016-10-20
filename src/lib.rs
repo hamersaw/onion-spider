@@ -19,7 +19,7 @@ use std::sync::{Arc, RwLock};
 use fetcher::{Fetcher, LibCurlFetcher};
 use frontier::{Frontier, PriorityFrontier};
 use link_extractor::{BothExtractor, LinkExtractor, TorHiddenServiceExtractor, WebExtractor};
-use polzat_pb::{ScheduleTaskReply, ScheduleTaskRequest, ScheduleTaskRequest_UrlType, ScheduleTaskRequest_Operation};
+use polzat_pb::{ScheduleTaskReply, ScheduleTaskRequest, ScheduleTaskRequest_UrlType, ScheduleTaskRequest_Operation, StatsReply, StatsRequest};
 use url_validator::{RobotsValidator, UrlValidator};
 
 /*
@@ -166,4 +166,15 @@ pub fn create_schedule_task_request(execution_id: u32, priority: u8, url: &str, 
     }
 
     request
+}
+
+pub fn create_stats_reply(frontier_length: u64) -> StatsReply {
+    let mut reply = StatsReply::new();
+    reply.set_frontier_length(frontier_length);
+
+    reply
+}
+
+pub fn create_stats_request() -> StatsRequest {
+    StatsRequest::new()
 }

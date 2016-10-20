@@ -13,7 +13,7 @@ use grpc::error::GrpcError;
 use grpc::result::GrpcResult;
 use polzat::{FetcherType, LinkExtractorType, PolzatTask, Operation, UrlType};
 use polzat::frontier::{Frontier, PriorityFrontier};
-use polzat::polzat_pb::{ScheduleTaskReply, ScheduleTaskRequest, ScheduleTaskRequest_UrlType, ScheduleTaskRequest_Operation};
+use polzat::polzat_pb::{ScheduleTaskReply, ScheduleTaskRequest, ScheduleTaskRequest_UrlType, ScheduleTaskRequest_Operation, StatsReply, StatsRequest};
 use polzat::polzat_pb_grpc::{Polzat, PolzatServer};
 use polzat::url_validator::RobotsValidator;
 use threadpool::ThreadPool;
@@ -62,7 +62,7 @@ fn main() {
         //read next polzat task from frontier
         let polzat_task;
         {
-            let mut frontier = frontier.write().expect("unable to get write lock on frontier polzatd.main()");
+            let mut frontier = frontier.write().expect("unable to get write lock on frontier PolzatD.main()");
             polzat_task = frontier.pop();
         }
 
@@ -119,10 +119,16 @@ impl Polzat for PolzatD {
                 LinkExtractorType::Web,
             );
         
-        let mut frontier = self.frontier.write().expect("unable to get write lock on frontier polzatd.ScheduleTask(_)");
+        let mut frontier = self.frontier.write().expect("unable to get write lock on frontier PolzatD.ScheduleTask()");
         match frontier.push(polzat_task) {
             Ok(_) => Ok(polzat::create_schedule_task_reply()),
             Err(_) => Err(GrpcError::Other("unable to push task to frontier")),
         }
+    }
+
+    fn Stats(&self, request: StatsRequest) -> GrpcResult<StatsReply> {
+        let frontier = self.frontier.read().expect("unable to get read lock on frontier PolzatD.Stats()");
+
+        Ok(polzat::create_stats_reply(frontier.len() as u64))
     }
 }

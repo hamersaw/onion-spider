@@ -12,6 +12,7 @@ Interact with PolzatD application
 Usage:
     polzat crawl <url> [--ip-address=<ip>] [--port=<port>]
     polzat scrape <url> [--ip-address=<ip>] [--port=<port>]
+    polzat stats
     polzat (-h | --help)
 
 Options:
@@ -24,6 +25,7 @@ Options:
 struct Args {
     cmd_crawl: bool,
     cmd_scrape: bool,
+    cmd_stats: bool,
     arg_url: String,
     flag_ip_address: String,
     flag_port: u16,
@@ -44,6 +46,11 @@ fn main() {
     } else if args.cmd_scrape {
         let request = polzat::create_schedule_task_request(0, 0, &args.arg_url, UrlType::Web, Operation::Scrape);
         let response = client.ScheduleTask(request);
+
+        println!("response: {:?}", response);
+    } else if args.cmd_stats {
+        let request = polzat::create_stats_request();
+        let response = client.Stats(request);
 
         println!("response: {:?}", response);
     }
