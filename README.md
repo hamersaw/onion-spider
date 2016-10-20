@@ -22,7 +22,7 @@ cargo build
 xmh57jrzrnw6insl - Torch Search Engine
 
 ##TODO
-- solve read lock on frontier (shouldn't be locked)
+- add execution id to polzat client
 - url validator for TOR urls
 - perhaps add an allow_regex for robots.txt parsing?
 - tor crawl

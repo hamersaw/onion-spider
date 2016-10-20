@@ -117,10 +117,10 @@ pub fn execute_polzat_crawl(polzat_task: PolzatTask, frontier: Arc<RwLock<Priori
     let response = try!(fetcher.fetch(&polzat_task));
     let url_map = try!(link_extractor.extract(&response));
     
-    let mut frontier = frontier.write().expect("unable to get write lock on frontier execute_polzat_crawl(_)");
-    let mut url_validator = url_validator.write().expect("unable to get write lock on url_validator execute_polzat_crawl(_)");
     for (key, value) in url_map.iter() {
+        let mut url_validator = url_validator.write().expect("unable to get write lock on url_validator execute_polzat_crawl(_)");
         for url in value.iter().filter(|x| url_validator.is_valid(key, x)) {
+            let mut frontier = frontier.write().expect("unable to get write lock on frontier execute_polzat_crawl(_)");
             let _ = frontier.push(
                     PolzatTask::new(
                         polzat_task.execution_id,
