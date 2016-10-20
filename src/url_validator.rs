@@ -51,19 +51,19 @@ impl UrlValidator for RobotsValidator {
             let mut curl_handle = Easy::new();
             {
                 //set curl handle parameters
-                let _ = curl_handle.url(&format!("{}/robots.txt", domain)).unwrap();
-                let _ = curl_handle.follow_location(true).unwrap();
+                let _ = curl_handle.url(&format!("{}/robots.txt", domain)).expect("unable to set url RobotsValidator.is_valid()");
+                let _ = curl_handle.follow_location(true).expect("unable to set follow_location RobotsValidator.is_valid()");
 
                 //set transfer function
                 let mut transfer = curl_handle.transfer();
                 let _ = transfer.write_function(|data| {
                     buffer.extend_from_slice(data);
                     Ok(data.len())
-                }).unwrap();
+                }).expect("unable to set transfer.write_function RobotsValidator.is_valid()");
 
                 //submit curl request
                 if transfer.perform().is_err() {
-                    return Regex::new("a^").unwrap()
+                    return Regex::new("a^").expect("unable to parse regex 'a^'")
                 }
             }
 
@@ -78,18 +78,23 @@ impl UrlValidator for RobotsValidator {
                 };
 
                 if key == "User-agent:" {
-                    if fields.next().unwrap() == "*" {
+                    if fields.next().expect("unable to parse user agent type") == "*" {
                         include_regex = true;
                     } else {
                         include_regex = false;
                     }
                 } else if include_regex && key == "Disallow:" {
-                    vec_disallow.push(format!("{}.*", fields.next().unwrap().replace("?", "\\?").replace("*", ".*")).replace("**", "*"));
+                    let url = match fields.next() {
+                        Some(url) => url,
+                        None => continue, //disallow without a url
+                    };
+
+                    vec_disallow.push(format!("{}.*", url.replace("?", "\\?").replace("*", ".*")).replace("**", "*"));
                 }
             }
 
             match vec_disallow.len() {
-                0 => Regex::new("a^").unwrap(), //match nothing
+                0 => Regex::new("a^").expect("unable to parse url 'a^'"), //match nothing
                 _ => Regex::new(&vec_disallow.join("|")).expect("unable to parse regex correctly"),
             }
         });

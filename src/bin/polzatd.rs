@@ -62,7 +62,7 @@ fn main() {
         //read next polzat task from frontier
         let polzat_task;
         {
-            let mut frontier = frontier.write().unwrap();
+            let mut frontier = frontier.write().expect("unable to get write lock on frontier polzatd.main()");
             polzat_task = frontier.pop();
         }
 
@@ -119,7 +119,7 @@ impl Polzat for PolzatD {
                 LinkExtractorType::Web,
             );
         
-        let mut frontier = self.frontier.write().unwrap();
+        let mut frontier = self.frontier.write().expect("unable to get write lock on frontier polzatd.ScheduleTask(_)");
         match frontier.push(polzat_task) {
             Ok(_) => Ok(polzat::create_schedule_task_reply()),
             Err(_) => Err(GrpcError::Other("unable to push task to frontier")),
